@@ -1,0 +1,37 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# R
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# VS Code / IDE
+.vscode/
+.idea/
+
+# Virtual environments
+venv/
+.env/
+.venv/
+
+# Quarto / render / temp
+*_cache/
+_files/
+.quarto/
+
+# Large or local-only data
+data/raw/
+data/private/
+*.zip
+
+# Temporary output
+tmp/
+temp/

@@ -1,0 +1,809 @@
+> #----------------------- RandomForest -----------------------#
+> library(caret)
+> library(fastDummies)
+> library(randomForest)
+> # Dropping missing values
+> gun_data_clean <- gun_data %>% drop_na()
+> # Convert 'state', 'month', and 'weekday' to factor type
+> gun_data_clean$state <- as.factor(gun_data_clean$state)
+> gun_data_clean$month <- as.factor(gun_data_clean$month)
+> gun_data_clean$weekday <- as.factor(gun_data_clean$weekday)
+> # Applying one-hot encoding using fastDummies
+> gun_data_encoded <- dummy_cols(
++   gun_data_clean,
++   select_columns = c("state", "month", "weekday"),
++   remove_first_dummy = FALSE,
++   remove_selected_columns = TRUE
++ )
+> # Creating a new variable for total casualties
+> gun_data_encoded$total_casualties <- gun_data_encoded$n_killed + gun_data_encoded$n_injured
+> # Creating the 'high_casualty' variable
+> gun_data_encoded$high_casualty <- ifelse(gun_data_encoded$total_casualties >= 3, 1, 0)
+> # List of columns to remove
+> columns_to_remove <- c(
++   "incident_id", "date", "city_or_county", "address", "incident_url", "source_url",
++   "incident_url_fields_missing", "gun_stolen", "gun_type", "incident_characteristics",
++   "latitude", "location_description", "longitude", "notes", "participant_age",
++   "participant_age_group", "participant_gender", "participant_name",
++   "participant_relationship", "participant_status", "participant_type",
++   "sources", "day", "date2", "n_injured", "n_killed")
+> # Removing the specified columns
+> gun_data_encoded <- gun_data_encoded[, !(names(gun_data_encoded) %in% columns_to_remove)]
+> # Splitting the dataset into training and testing sets
+> set.seed(123)
+> train_index <- sample(seq_len(nrow(gun_data_encoded)), size = 0.7 * nrow(gun_data_encoded))
+> train_data <- gun_data_encoded[train_index, ]
+> test_data <- gun_data_encoded[-train_index, ]
+> # Ensuring column names have no spaces
+> names(train_data) <- gsub(" ", "_", names(train_data))
+> names(test_data) <- gsub(" ", "_", names(test_data))
+> # Identifying numeric columns for scaling, EXCLUDING 'total_casualties' and 'high_casualty'
+> numeric_columns <- sapply(train_data, is.numeric)
+> numeric_columns <- names(train_data)[numeric_columns]
+> numeric_columns <- setdiff(numeric_columns, c("total_casualties", "high_casualty"))
+> # Scaling numeric columns
+> scaling_params <- preProcess(train_data[numeric_columns], method = c("center", "scale"))
+Warning in preProcess.default(train_data[numeric_columns], method = c("center",  :
+  These variables have zero variances: state_Vermont
+> train_data_scaled <- train_data
+> train_data_scaled[numeric_columns] <- predict(scaling_params, train_data[numeric_columns])
+> test_data_scaled <- test_data
+> test_data_scaled[numeric_columns] <- predict(scaling_params, test_data[numeric_columns])
+> # Removing the 'state_Vermont' column if present
+> if ("state_Vermont" %in% names(train_data_scaled)) {
++   train_data_scaled <- train_data_scaled[, !(names(train_data_scaled) %in% "state_Vermont")]
++ }
+> if ("state_Vermont" %in% names(test_data_scaled)) {
++   test_data_scaled <- test_data_scaled[, !(names(test_data_scaled) %in% "state_Vermont")]
++ }
+> # Convert 'high_casualty' to a factor for classification
+> train_data_scaled$high_casualty <- as.factor(train_data_scaled$high_casualty)
+> test_data_scaled$high_casualty <- as.factor(test_data_scaled$high_casualty)
+> summary(train_data_scaled)
+ congressional_district n_guns_involved    state_house_district state_senate_district      year        
+ Min.   :-0.9689        Min.   :-0.07545   Min.   :-1.2224      Min.   :-1.3628       Min.   :-3.3780  
+ 1st Qu.:-0.7328        1st Qu.:-0.07545   1st Qu.:-0.7698      1st Qu.:-0.8708       1st Qu.:-0.3823  
+ Median :-0.3787        Median :-0.07545   Median :-0.2042      Median :-0.1678       Median : 0.6163  
+ Mean   : 0.0000        Mean   : 0.00000   Mean   : 0.0000      Mean   : 0.0000       Mean   : 0.0000  
+ 3rd Qu.: 0.3296        3rd Qu.:-0.07545   3rd Qu.: 0.6330      3rd Qu.: 0.6757       3rd Qu.: 0.6163  
+ Max.   : 5.2875        Max.   :79.90351   Max.   :17.1730      Max.   : 2.9954       Max.   : 1.6149  
+    quarter        state_Alabama      state_Alaska      state_Arizona     state_Arkansas   
+ Min.   :-1.2757   Min.   :-0.1522   Min.   :-0.02336   Min.   :-0.1095   Min.   :-0.1186  
+ 1st Qu.:-1.2757   1st Qu.:-0.1522   1st Qu.:-0.02336   1st Qu.:-0.1095   1st Qu.:-0.1186  
+ Median : 0.4459   Median :-0.1522   Median :-0.02336   Median :-0.1095   Median :-0.1186  
+ Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.00000   Mean   : 0.0000   Mean   : 0.0000  
+ 3rd Qu.: 1.3066   3rd Qu.:-0.1522   3rd Qu.:-0.02336   3rd Qu.:-0.1095   3rd Qu.:-0.1186  
+ Max.   : 1.3066   Max.   : 6.5685   Max.   :42.80866   Max.   : 9.1283   Max.   : 8.4303  
+ state_California  state_Colorado    state_Connecticut state_Delaware     state_District_of_Columbia
+ Min.   :-0.2955   Min.   :-0.1267   Min.   :-0.1256   Min.   :-0.08698   Min.   : -0.00504         
+ 1st Qu.:-0.2955   1st Qu.:-0.1267   1st Qu.:-0.1256   1st Qu.:-0.08698   1st Qu.: -0.00504         
+ Median :-0.2955   Median :-0.1267   Median :-0.1256   Median :-0.08698   Median : -0.00504         
+ Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.00000   Mean   :  0.00000         
+ 3rd Qu.:-0.2955   3rd Qu.:-0.1267   3rd Qu.:-0.1256   3rd Qu.:-0.08698   3rd Qu.: -0.00504         
+ Max.   : 3.3843   Max.   : 7.8948   Max.   : 7.9634   Max.   :11.49706   Max.   :198.54722         
+ state_Florida     state_Georgia      state_Hawaii       state_Idaho       state_Illinois   
+ Min.   :-0.2855   Min.   :-0.2039   Min.   :-0.03953   Min.   :-0.06404   Min.   :-0.3215  
+ 1st Qu.:-0.2855   1st Qu.:-0.2039   1st Qu.:-0.03953   1st Qu.:-0.06404   1st Qu.:-0.3215  
+ Median :-0.2855   Median :-0.2039   Median :-0.03953   Median :-0.06404   Median :-0.3215  
+ Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.00000   Mean   : 0.00000   Mean   : 0.0000  
+ 3rd Qu.:-0.2855   3rd Qu.:-0.2039   3rd Qu.:-0.03953   3rd Qu.:-0.06404   3rd Qu.:-0.3215  
+ Max.   : 3.5027   Max.   : 4.9036   Max.   :25.29838   Max.   :15.61593   Max.   : 3.1104  
+ state_Indiana       state_Iowa       state_Kansas     state_Kentucky     state_Louisiana  
+ Min.   :-0.1813   Min.   :-0.1081   Min.   :-0.1021   Min.   :-0.06424   Min.   :-0.1895  
+ 1st Qu.:-0.1813   1st Qu.:-0.1081   1st Qu.:-0.1021   1st Qu.:-0.06424   1st Qu.:-0.1895  
+ Median :-0.1813   Median :-0.1081   Median :-0.1021   Median :-0.06424   Median :-0.1895  
+ Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.00000   Mean   : 0.0000  
+ 3rd Qu.:-0.1813   3rd Qu.:-0.1081   3rd Qu.:-0.1021   3rd Qu.:-0.06424   3rd Qu.:-0.1895  
+ Max.   : 5.5147   Max.   : 9.2543   Max.   : 9.7969   Max.   :15.56746   Max.   : 5.2782  
+  state_Maine       state_Maryland    state_Massachusetts state_Michigan    state_Minnesota    
+ Min.   :-0.06941   Min.   :-0.1406   Min.   :-0.08735    Min.   :-0.1834   Min.   : -0.00504  
+ 1st Qu.:-0.06941   1st Qu.:-0.1406   1st Qu.:-0.08735    1st Qu.:-0.1834   1st Qu.: -0.00504  
+ Median :-0.06941   Median :-0.1406   Median :-0.08735    Median :-0.1834   Median : -0.00504  
+ Mean   : 0.00000   Mean   : 0.0000   Mean   : 0.00000    Mean   : 0.0000   Mean   :  0.00000  
+ 3rd Qu.:-0.06941   3rd Qu.:-0.1406   3rd Qu.:-0.08735    3rd Qu.:-0.1834   3rd Qu.: -0.00504  
+ Max.   :14.40771   Max.   : 7.1110   Max.   :11.44845    Max.   : 5.4522   Max.   :198.54722  
+ state_Mississippi state_Missouri    state_Montana      state_Nebraska       state_Nevada     
+ Min.   :-0.1241   Min.   :-0.1848   Min.   :-0.02666   Min.   : -0.00356   Min.   :-0.09188  
+ 1st Qu.:-0.1241   1st Qu.:-0.1848   1st Qu.:-0.02666   1st Qu.: -0.00356   1st Qu.:-0.09188  
+ Median :-0.1241   Median :-0.1848   Median :-0.02666   Median : -0.00356   Median :-0.09188  
+ Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.00000   Mean   :  0.00000   Mean   : 0.00000  
+ 3rd Qu.:-0.1241   3rd Qu.:-0.1848   3rd Qu.:-0.02666   3rd Qu.: -0.00356   3rd Qu.:-0.09188  
+ Max.   : 8.0575   Max.   : 5.4098   Max.   :37.50905   Max.   :280.78996   Max.   :10.88396  
+ state_New_Hampshire state_New_Jersey  state_New_Mexico   state_New_York   state_North_Carolina
+ Min.   :-0.03227    Min.   :-0.1562   Min.   :-0.09382   Min.   :-0.219   Min.   :-0.1881     
+ 1st Qu.:-0.03227    1st Qu.:-0.1562   1st Qu.:-0.09382   1st Qu.:-0.219   1st Qu.:-0.1881     
+ Median :-0.03227    Median :-0.1562   Median :-0.09382   Median :-0.219   Median :-0.1881     
+ Mean   : 0.00000    Mean   : 0.0000   Mean   : 0.00000   Mean   : 0.000   Mean   : 0.0000     
+ 3rd Qu.:-0.03227    3rd Qu.:-0.1562   3rd Qu.:-0.09382   3rd Qu.:-0.219   3rd Qu.:-0.1881     
+ Max.   :30.99213    Max.   : 6.4000   Max.   :10.65828   Max.   : 4.565   Max.   : 5.3156     
+ state_North_Dakota   state_Ohio      state_Oklahoma     state_Oregon     state_Pennsylvania
+ Min.   :-0.0556    Min.   :-0.2419   Min.   :-0.1288   Min.   :-0.1122   Min.   :-0.0995   
+ 1st Qu.:-0.0556    1st Qu.:-0.2419   1st Qu.:-0.1288   1st Qu.:-0.1122   1st Qu.:-0.0995   
+ Median :-0.0556    Median :-0.2419   Median :-0.1288   Median :-0.1122   Median :-0.0995   
+ Mean   : 0.0000    Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.0000   
+ 3rd Qu.:-0.0556    3rd Qu.:-0.2419   3rd Qu.:-0.1288   3rd Qu.:-0.1122   3rd Qu.:-0.0995   
+ Max.   :17.9850    Max.   : 4.1347   Max.   : 7.7659   Max.   : 8.9136   Max.   :10.0497   
+ state_Rhode_Island state_South_Carolina state_South_Dakota state_Tennessee    state_Texas     
+ Min.   :-0.06522   Min.   :-0.1752      Min.   :-0.0556    Min.   :-0.1861   Min.   :-0.2094  
+ 1st Qu.:-0.06522   1st Qu.:-0.1752      1st Qu.:-0.0556    1st Qu.:-0.1861   1st Qu.:-0.2094  
+ Median :-0.06522   Median :-0.1752      Median :-0.0556    Median :-0.1861   Median :-0.2094  
+ Mean   : 0.00000   Mean   : 0.0000      Mean   : 0.0000    Mean   : 0.0000   Mean   : 0.0000  
+ 3rd Qu.:-0.06522   3rd Qu.:-0.1752      3rd Qu.:-0.0556    3rd Qu.:-0.1861   3rd Qu.:-0.2094  
+ Max.   :15.33166   Max.   : 5.7066      Max.   :17.9850    Max.   : 5.3737   Max.   : 4.7748  
+   state_Utah       state_Virginia    state_Washington  state_West_Virginia state_Wisconsin  
+ Min.   :-0.07785   Min.   :-0.1551   Min.   :-0.1384   Min.   :-0.0872     Min.   :-0.1516  
+ 1st Qu.:-0.07785   1st Qu.:-0.1551   1st Qu.:-0.1384   1st Qu.:-0.0872     1st Qu.:-0.1516  
+ Median :-0.07785   Median :-0.1551   Median :-0.1384   Median :-0.0872     Median :-0.1516  
+ Mean   : 0.00000   Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.0000     Mean   : 0.0000  
+ 3rd Qu.:-0.07785   3rd Qu.:-0.1551   3rd Qu.:-0.1384   3rd Qu.:-0.0872     3rd Qu.:-0.1516  
+ Max.   :12.84474   Max.   : 6.4459   Max.   : 7.2275   Max.   :11.4678     Max.   : 6.5969  
+ state_Wyoming        month_Jan         month_Feb         month_Mar         month_Apr      
+ Min.   :-0.04322   Min.   :-0.3428   Min.   :-0.3023   Min.   :-0.3282   Min.   :-0.2733  
+ 1st Qu.:-0.04322   1st Qu.:-0.3428   1st Qu.:-0.3023   1st Qu.:-0.3282   1st Qu.:-0.2733  
+ Median :-0.04322   Median :-0.3428   Median :-0.3023   Median :-0.3282   Median :-0.2733  
+ Mean   : 0.00000   Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.0000  
+ 3rd Qu.:-0.04322   3rd Qu.:-0.3428   3rd Qu.:-0.3023   3rd Qu.:-0.3282   3rd Qu.:-0.2733  
+ Max.   :23.13771   Max.   : 2.9173   Max.   : 3.3077   Max.   : 3.0465   Max.   : 3.6585  
+   month_May         month_Jun         month_Jul         month_Aug         month_Sep      
+ Min.   :-0.2797   Min.   :-0.2689   Min.   :-0.2805   Min.   :-0.3107   Min.   :-0.2939  
+ 1st Qu.:-0.2797   1st Qu.:-0.2689   1st Qu.:-0.2805   1st Qu.:-0.3107   1st Qu.:-0.2939  
+ Median :-0.2797   Median :-0.2689   Median :-0.2805   Median :-0.3107   Median :-0.2939  
+ Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.0000  
+ 3rd Qu.:-0.2797   3rd Qu.:-0.2689   3rd Qu.:-0.2805   3rd Qu.:-0.3107   3rd Qu.:-0.2939  
+ Max.   : 3.5755   Max.   : 3.7183   Max.   : 3.5654   Max.   : 3.2183   Max.   : 3.4022  
+   month_Oct         month_Nov         month_Dec        weekday_Sun       weekday_Mon     
+ Min.   :-0.3074   Min.   :-0.3001   Min.   :-0.3237   Min.   :-0.4219   Min.   :-0.4058  
+ 1st Qu.:-0.3074   1st Qu.:-0.3001   1st Qu.:-0.3237   1st Qu.:-0.4219   1st Qu.:-0.4058  
+ Median :-0.3074   Median :-0.3001   Median :-0.3237   Median :-0.4219   Median :-0.4058  
+ Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.0000  
+ 3rd Qu.:-0.3074   3rd Qu.:-0.3001   3rd Qu.:-0.3237   3rd Qu.:-0.4219   3rd Qu.:-0.4058  
+ Max.   : 3.2531   Max.   : 3.3317   Max.   : 3.0890   Max.   : 2.3704   Max.   : 2.4640  
+  weekday_Tue       weekday_Wed       weekday_Thu       weekday_Fri       weekday_Sat     
+ Min.   :-0.4067   Min.   :-0.4114   Min.   :-0.4009   Min.   :-0.3983   Min.   :-0.4126  
+ 1st Qu.:-0.4067   1st Qu.:-0.4114   1st Qu.:-0.4009   1st Qu.:-0.3983   1st Qu.:-0.4126  
+ Median :-0.4067   Median :-0.4114   Median :-0.4009   Median :-0.3983   Median :-0.4126  
+ Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.0000   Mean   : 0.0000  
+ 3rd Qu.:-0.4067   3rd Qu.:-0.4114   3rd Qu.:-0.4009   3rd Qu.:-0.3983   3rd Qu.:-0.4126  
+ Max.   : 2.4587   Max.   : 2.4309   Max.   : 2.4946   Max.   : 2.5109   Max.   : 2.4235  
+ total_casualties  high_casualty
+ Min.   :  0.000   0:76871      
+ 1st Qu.:  0.000   1: 1974      
+ Median :  1.000                
+ Mean   :  0.712                
+ 3rd Qu.:  1.000                
+ Max.   :103.000                
+> summary(test_data_scaled)
+ congressional_district n_guns_involved    state_house_district state_senate_district
+ Min.   :-0.96891       Min.   :-0.07545   Min.   :-1.222350    Min.   :-1.362831    
+ 1st Qu.:-0.73282       1st Qu.:-0.07545   1st Qu.:-0.769820    1st Qu.:-0.870774    
+ Median :-0.37868       Median :-0.07545   Median :-0.204158    Median :-0.167834    
+ Mean   :-0.01313       Mean   : 0.00364   Mean   :-0.007419    Mean   :-0.000761    
+ 3rd Qu.: 0.32959       3rd Qu.:-0.07545   3rd Qu.: 0.633023    3rd Qu.: 0.675693    
+ Max.   : 5.28749       Max.   :79.70306   Max.   :19.141490    Max.   : 5.174505    
+      year             quarter          state_Alabama        state_Alaska      state_Arizona      
+ Min.   :-3.37796   Min.   :-1.275664   Min.   :-0.152239   Min.   :-0.02336   Min.   :-0.109549  
+ 1st Qu.:-0.38225   1st Qu.:-1.275664   1st Qu.:-0.152239   1st Qu.:-0.02336   1st Qu.:-0.109549  
+ Median : 0.61631   Median : 0.445869   Median :-0.152239   Median :-0.02336   Median :-0.109549  
+ Mean   : 0.00475   Mean   : 0.003119   Mean   :-0.002871   Mean   : 0.00960   Mean   : 0.007185  
+ 3rd Qu.: 0.61631   3rd Qu.: 1.306636   3rd Qu.:-0.152239   3rd Qu.:-0.02336   3rd Qu.:-0.109549  
+ Max.   : 1.61488   Max.   : 1.306636   Max.   : 6.568530   Max.   :42.80866   Max.   : 9.128261  
+ state_Arkansas      state_California    state_Colorado      state_Connecticut   state_Delaware     
+ Min.   :-0.118619   Min.   :-0.295476   Min.   :-0.126663   Min.   :-0.125574   Min.   :-0.086978  
+ 1st Qu.:-0.118619   1st Qu.:-0.295476   1st Qu.:-0.126663   1st Qu.:-0.125574   1st Qu.:-0.086978  
+ Median :-0.118619   Median :-0.295476   Median :-0.126663   Median :-0.125574   Median :-0.086978  
+ Mean   :-0.000724   Mean   : 0.003016   Mean   : 0.001762   Mean   :-0.008756   Mean   :-0.005731  
+ 3rd Qu.:-0.118619   3rd Qu.:-0.295476   3rd Qu.:-0.126663   3rd Qu.:-0.125574   3rd Qu.:-0.086978  
+ Max.   : 8.430272   Max.   : 3.384325   Max.   : 7.894842   Max.   : 7.963356   Max.   :11.497062  
+ state_District_of_Columbia state_Florida       state_Georgia        state_Hawaii      
+ Min.   : -0.00504          Min.   :-0.285490   Min.   :-0.203927   Min.   :-0.039528  
+ 1st Qu.: -0.00504          1st Qu.:-0.285490   1st Qu.:-0.203927   1st Qu.:-0.039528  
+ Median : -0.00504          Median :-0.285490   Median :-0.203927   Median :-0.039528  
+ Mean   :  0.01259          Mean   :-0.002197   Mean   : 0.001186   Mean   : 0.005463  
+ 3rd Qu.: -0.00504          3rd Qu.:-0.285490   3rd Qu.:-0.203927   3rd Qu.:-0.039528  
+ Max.   :198.54722          Max.   : 3.502705   Max.   : 4.903647   Max.   :25.298382  
+  state_Idaho        state_Illinois       state_Indiana         state_Iowa         state_Kansas      
+ Min.   :-0.064036   Min.   :-0.3214944   Min.   :-0.181331   Min.   :-0.108057   Min.   :-0.102072  
+ 1st Qu.:-0.064036   1st Qu.:-0.3214944   1st Qu.:-0.181331   1st Qu.:-0.108057   1st Qu.:-0.102072  
+ Median :-0.064036   Median :-0.3214944   Median :-0.181331   Median :-0.108057   Median :-0.102072  
+ Mean   : 0.001392   Mean   :-0.0006556   Mean   : 0.004935   Mean   :-0.001663   Mean   :-0.007157  
+ 3rd Qu.:-0.064036   3rd Qu.:-0.3214944   3rd Qu.:-0.181331   3rd Qu.:-0.108057   3rd Qu.:-0.102072  
+ Max.   :15.615926   Max.   : 3.1104345   Max.   : 5.514704   Max.   : 9.254284   Max.   : 9.796892  
+ state_Kentucky     state_Louisiana      state_Maine        state_Maryland      state_Massachusetts
+ Min.   :-0.06424   Min.   :-0.189456   Min.   :-0.069406   Min.   :-0.140626   Min.   :-0.087347  
+ 1st Qu.:-0.06424   1st Qu.:-0.189456   1st Qu.:-0.069406   1st Qu.:-0.140626   1st Qu.:-0.087347  
+ Median :-0.06424   Median :-0.189456   Median :-0.069406   Median :-0.140626   Median :-0.087347  
+ Mean   : 0.01348   Mean   : 0.008921   Mean   : 0.000428   Mean   : 0.000581   Mean   :-0.001318  
+ 3rd Qu.:-0.06424   3rd Qu.:-0.189456   3rd Qu.:-0.069406   3rd Qu.:-0.140626   3rd Qu.:-0.087347  
+ Max.   :15.56746   Max.   : 5.278206   Max.   :14.407707   Max.   : 7.110959   Max.   :11.448450  
+ state_Michigan     state_Minnesota     state_Mississippi   state_Missouri      state_Montana     
+ Min.   :-0.18341   Min.   :-0.005037   Min.   :-0.124107   Min.   :-0.184846   Min.   :-0.02666  
+ 1st Qu.:-0.18341   1st Qu.:-0.005037   1st Qu.:-0.124107   1st Qu.:-0.184846   1st Qu.:-0.02666  
+ Median :-0.18341   Median :-0.005037   Median :-0.124107   Median :-0.184846   Median :-0.02666  
+ Mean   :-0.00946   Mean   :-0.005037   Mean   :-0.001108   Mean   :-0.007689   Mean   : 0.01000  
+ 3rd Qu.:-0.18341   3rd Qu.:-0.005037   3rd Qu.:-0.124107   3rd Qu.:-0.184846   3rd Qu.:-0.02666  
+ Max.   : 5.45219   Max.   :-0.005037   Max.   : 8.057487   Max.   : 5.409845   Max.   :37.50905  
+ state_Nebraska       state_Nevada      state_New_Hampshire state_New_Jersey   state_New_Mexico   
+ Min.   :-0.003561   Min.   :-0.09188   Min.   :-0.032266   Min.   :-0.15625   Min.   :-0.093823  
+ 1st Qu.:-0.003561   1st Qu.:-0.09188   1st Qu.:-0.032266   1st Qu.:-0.15625   1st Qu.:-0.093823  
+ Median :-0.003561   Median :-0.09188   Median :-0.032266   Median :-0.15625   Median :-0.093823  
+ Mean   :-0.003561   Mean   :-0.01165   Mean   :-0.007476   Mean   : 0.00363   Mean   :-0.009819  
+ 3rd Qu.:-0.003561   3rd Qu.:-0.09188   3rd Qu.:-0.032266   3rd Qu.:-0.15625   3rd Qu.:-0.093823  
+ Max.   :-0.003561   Max.   :10.88396   Max.   :30.992131   Max.   : 6.40005   Max.   :10.658276  
+ state_New_York      state_North_Carolina state_North_Dakota    state_Ohio       state_Oklahoma     
+ Min.   :-0.219049   Min.   :-0.188123    Min.   :-0.055601   Min.   :-0.24185   Min.   :-0.128766  
+ 1st Qu.:-0.219049   1st Qu.:-0.188123    1st Qu.:-0.055601   1st Qu.:-0.24185   1st Qu.:-0.128766  
+ Median :-0.219049   Median :-0.188123    Median :-0.055601   Median :-0.24185   Median :-0.128766  
+ Mean   : 0.000544   Mean   : 0.004233    Mean   :-0.001145   Mean   : 0.00022   Mean   :-0.001904  
+ 3rd Qu.:-0.219049   3rd Qu.:-0.188123    3rd Qu.:-0.055601   3rd Qu.:-0.24185   3rd Qu.:-0.128766  
+ Max.   : 4.565135   Max.   : 5.315606    Max.   :17.985019   Max.   : 4.13473   Max.   : 7.765919  
+  state_Oregon       state_Pennsylvania  state_Rhode_Island  state_South_Carolina state_South_Dakota 
+ Min.   :-0.112186   Min.   :-0.099504   Min.   :-0.065224   Min.   :-0.175234    Min.   :-0.055601  
+ 1st Qu.:-0.112186   1st Qu.:-0.099504   1st Qu.:-0.065224   1st Qu.:-0.175234    1st Qu.:-0.055601  
+ Median :-0.112186   Median :-0.099504   Median :-0.065224   Median :-0.175234    Median :-0.055601  
+ Mean   : 0.003739   Mean   :-0.003691   Mean   : 0.002668   Mean   : 0.003007    Mean   : 0.007398  
+ 3rd Qu.:-0.112186   3rd Qu.:-0.099504   3rd Qu.:-0.065224   3rd Qu.:-0.175234    3rd Qu.:-0.055601  
+ Max.   : 8.913645   Max.   :10.049748   Max.   :15.331663   Max.   : 5.706569    Max.   :17.985019  
+ state_Tennessee      state_Texas          state_Utah        state_Virginia     state_Washington   
+ Min.   :-0.186090   Min.   :-0.209432   Min.   :-0.077852   Min.   :-0.15514   Min.   :-0.138358  
+ 1st Qu.:-0.186090   1st Qu.:-0.209432   1st Qu.:-0.077852   1st Qu.:-0.15514   1st Qu.:-0.138358  
+ Median :-0.186090   Median :-0.209432   Median :-0.077852   Median :-0.15514   Median :-0.138358  
+ Mean   : 0.005264   Mean   :-0.008683   Mean   : 0.001693   Mean   : 0.01169   Mean   :-0.004299  
+ 3rd Qu.:-0.186090   3rd Qu.:-0.209432   3rd Qu.:-0.077852   3rd Qu.:-0.15514   3rd Qu.:-0.138358  
+ Max.   : 5.373684   Max.   : 4.774765   Max.   :12.844741   Max.   : 6.44588   Max.   : 7.227518  
+ state_West_Virginia state_Wisconsin     state_Wyoming        month_Jan           month_Feb      
+ Min.   :-0.087199   Min.   :-0.151584   Min.   :-0.04322   Min.   :-0.342776   Min.   :-0.3023  
+ 1st Qu.:-0.087199   1st Qu.:-0.151584   1st Qu.:-0.04322   1st Qu.:-0.342776   1st Qu.:-0.3023  
+ Median :-0.087199   Median :-0.151584   Median :-0.04322   Median :-0.342776   Median :-0.3023  
+ Mean   : 0.002735   Mean   :-0.002997   Mean   : 0.00686   Mean   : 0.005703   Mean   :-0.0159  
+ 3rd Qu.:-0.087199   3rd Qu.:-0.151584   3rd Qu.:-0.04322   3rd Qu.:-0.342776   3rd Qu.:-0.3023  
+ Max.   :11.467822   Max.   : 6.596931   Max.   :23.13771   Max.   : 2.917319   Max.   : 3.3077  
+   month_Mar            month_Apr           month_May          month_Jun           month_Jul        
+ Min.   :-0.3282463   Min.   :-0.273329   Min.   :-0.27968   Min.   :-0.268935   Min.   :-0.280471  
+ 1st Qu.:-0.3282463   1st Qu.:-0.273329   1st Qu.:-0.27968   1st Qu.:-0.268935   1st Qu.:-0.280471  
+ Median :-0.3282463   Median :-0.273329   Median :-0.27968   Median :-0.268935   Median :-0.280471  
+ Mean   : 0.0002255   Mean   : 0.009306   Mean   :-0.00393   Mean   :-0.002025   Mean   : 0.007022  
+ 3rd Qu.:-0.3282463   3rd Qu.:-0.273329   3rd Qu.:-0.27968   3rd Qu.:-0.268935   3rd Qu.:-0.280471  
+ Max.   : 3.0464543   Max.   : 3.658549   Max.   : 3.57546   Max.   : 3.718318   Max.   : 3.565391  
+   month_Aug           month_Sep           month_Oct           month_Nov           month_Dec        
+ Min.   :-0.310718   Min.   :-0.293926   Min.   :-0.307393   Min.   :-0.300145   Min.   :-0.323723  
+ 1st Qu.:-0.310718   1st Qu.:-0.293926   1st Qu.:-0.307393   1st Qu.:-0.300145   1st Qu.:-0.323723  
+ Median :-0.310718   Median :-0.293926   Median :-0.307393   Median :-0.300145   Median :-0.323723  
+ Mean   :-0.003568   Mean   : 0.006107   Mean   : 0.003866   Mean   :-0.009092   Mean   : 0.002392  
+ 3rd Qu.:-0.310718   3rd Qu.:-0.293926   3rd Qu.:-0.307393   3rd Qu.:-0.300145   3rd Qu.:-0.323723  
+ Max.   : 3.218314   Max.   : 3.402178   Max.   : 3.253121   Max.   : 3.331677   Max.   : 3.089023  
+  weekday_Sun          weekday_Mon         weekday_Tue         weekday_Wed        weekday_Thu       
+ Min.   :-0.4218611   Min.   :-0.405841   Min.   :-0.406710   Min.   :-0.41136   Min.   :-0.400868  
+ 1st Qu.:-0.4218611   1st Qu.:-0.405841   1st Qu.:-0.406710   1st Qu.:-0.41136   1st Qu.:-0.400868  
+ Median :-0.4218611   Median :-0.405841   Median :-0.406710   Median :-0.41136   Median :-0.400868  
+ Mean   :-0.0001806   Mean   : 0.003175   Mean   :-0.006036   Mean   :-0.00761   Mean   : 0.001086  
+ 3rd Qu.:-0.4218611   3rd Qu.:-0.405841   3rd Qu.:-0.406710   3rd Qu.:-0.41136   3rd Qu.:-0.400868  
+ Max.   : 2.3704186   Max.   : 2.463985   Max.   : 2.458723   Max.   : 2.43094   Max.   : 2.494555  
+  weekday_Fri         weekday_Sat       total_casualties  high_casualty
+ Min.   :-0.398264   Min.   :-0.41262   Min.   : 0.0000   0:32906      
+ 1st Qu.:-0.398264   1st Qu.:-0.41262   1st Qu.: 0.0000   1:  885      
+ Median :-0.398264   Median :-0.41262   Median : 1.0000                
+ Mean   :-0.001811   Mean   : 0.01132   Mean   : 0.7134                
+ 3rd Qu.:-0.398264   3rd Qu.:-0.41262   3rd Qu.: 1.0000                
+ Max.   : 2.510865   Max.   : 2.42350   Max.   :25.0000                
+> # Fitting a random forest model to predict high casualty incidents
+> # Exclude 'total_casualties' from predictors to prevent data leakage
+> rf_model <- randomForest(
++   high_casualty ~ . - total_casualties,
++   data = train_data_scaled,
++   ntree = 100
++ )
+> # Predicting on the test set
+> # Remove 'high_casualty' from test data predictors
+> test_predictors <- test_data_scaled[, !(names(test_data_scaled) %in% c("high_casualty"))]
+> predictions <- predict(rf_model, newdata = test_predictors)
+> # Evaluating the model with a confusion matrix
+> confusion_matrix <- table(test_data_scaled$high_casualty, predictions)
+> print(confusion_matrix)
+   predictions
+        0     1
+  0 32902     4
+  1   859    26
+> # Calculating accuracy
+> accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+> print(paste("Accuracy:", round(accuracy, 4)))
+[1] "Accuracy: 0.9745"
+> library(PRROC)
+> library(pROC)
+> library(ModelMetrics)
+> # Calculate Precision, Recall, and F1 Score
+> true_negatives <- confusion_matrix[1, 1]
+> false_positives <- confusion_matrix[1, 2]
+> false_negatives <- confusion_matrix[2, 1]
+> true_positives <- confusion_matrix[2, 2]
+> # Precision
+> precision <- true_positives / (true_positives + false_positives)
+> # Recall
+> recall <- true_positives / (true_positives + false_negatives)
+> # F1 Score
+> f1_score <- 2 * (precision * recall) / (precision + recall)
+> # Print the results
+> cat("Precision:", round(precision, 4), "\n")
+Precision: 0.8667 
+> cat("Recall:", round(recall, 4), "\n")
+Recall: 0.0294 
+> cat("F1 Score:", round(f1_score, 4), "\n")
+F1 Score: 0.0568 
+> # Permutation Feature Importance - Displaying Top 10 Features
+> importance_values <- importance(rf_model)
+> importance_df <- data.frame(Feature = rownames(importance_values), 
++                             Importance = importance_values[, "MeanDecreaseGini"])
+> # Order the features by importance and select the top 10
+> top10_features <- importance_df[order(importance_df$Importance, decreasing = TRUE), ][1:10, ]
+> top10_features
+                                      Feature Importance
+state_house_district     state_house_district  213.93786
+state_senate_district   state_senate_district  162.40548
+year                                     year  154.25073
+congressional_district congressional_district  122.33956
+quarter                               quarter   42.50228
+n_guns_involved               n_guns_involved   39.20299
+month_Aug                           month_Aug   16.61692
+month_Sep                           month_Sep   15.96157
+month_Feb                           month_Feb   15.69531
+month_May                           month_May   15.61685
+> # Plot the top 10 variable importance
+> ggplot(top10_features, aes(x = reorder(Feature, Importance), y = Importance)) +
++   geom_col(fill = "blue") +
++   coord_flip() +
++   labs(title = "Top 10 Features in Random Forest Model",
++        x = "Feature",
++        y = "Importance") +
++   theme_minimal()
+> # Predicting probabilities on the test set
+> test_probabilities <- predict(rf_model, newdata = test_data_scaled, type = "prob")
+> # Extracting the probabilities for the positive class (high casualty incidents)
+> positive_probabilities <- test_probabilities[, "1"]
+> # Generating the ROC curve
+> roc_curve <- roc(test_data_scaled$high_casualty, positive_probabilities)
+Setting levels: control = 0, case = 1
+Setting direction: controls < cases
+> # Plotting the ROC curve
+> plot(roc_curve, col = "blue", main = "ROC Curve for Random Forest Model", lwd = 2)
+> abline(a = 0, b = 1, lty = 2, col = "red")
+> # Set up cross-validation parameters
+> train_control <- trainControl(method = "cv", number = 10)
+> # Train the random forest model using cross-validation
+> rf_cv_model <- train(high_casualty ~ . - total_casualties, 
++                      data = train_data, 
++                      method = "rf", 
++                      trControl = train_control,
++                      ntree = 10)
+There were 32 warnings (use warnings() to see them)
+> # Print the cross-validation results
+> print(rf_cv_model)
+Random Forest 
+
+78845 samples
+   77 predictor
+
+No pre-processing
+Resampling: Cross-Validated (10 fold) 
+Summary of sample sizes: 70960, 70961, 70961, 70960, 70960, 70960, ... 
+Resampling results across tuning parameters:
+
+  mtry  RMSE       Rsquared     MAE       
+   2    0.1551645  0.016819416  0.04845614
+  39    0.1655291  0.007800942  0.04958155
+  76    0.1691891  0.005769581  0.05089132
+
+RMSE was used to select the optimal model using the smallest value.
+The final value used for the model was mtry = 2.
+> #----------------------- Logistic Regression -----------------------#
+> library(caret)
+> # Train logistic regression model
+> logistic_model <- train(
++   high_casualty ~ . - total_casualties,
++   data = train_data_scaled,
++   method = "glm",
++   family = binomial
++ )
+There were 25 warnings (use warnings() to see them)
+> # Make predictions on the test set
+> logistic_predictions <- predict(logistic_model, newdata = test_data_scaled)
+Warning message:
+In predict.lm(object, newdata, se.fit, scale = 1, type = if (type ==  :
+  prediction from rank-deficient fit; attr(*, "non-estim") has doubtful cases
+> # Evaluate model performance
+> logistic_confusion_matrix <- confusionMatrix(logistic_predictions, test_data_scaled$high_casualty)
+> print(logistic_confusion_matrix)
+     [,1]  [,2]
+[1,]    0     0
+[2,]    0 33791
+> #----------------------- LightGBM  -----------------------#
+> # Required Libraries
+> library(lightgbm)
+> library(pROC)
+> library(caret)
+> # Convert data to matrix format suitable for lightgbm
+> train_matrix <- as.matrix(train_data_scaled[, -which(names(train_data_scaled) %in% "high_casualty")])
+> test_matrix <- as.matrix(test_data_scaled[, -which(names(test_data_scaled) %in% "high_casualty")])
+> train_labels <- as.numeric(train_data_scaled$high_casualty) - 1
+> test_labels <- as.numeric(test_data_scaled$high_casualty) - 1
+> train_matrix
+       congressional_district n_guns_involved state_house_district state_senate_district       year
+51663             -0.85086282     -0.07545071        -0.2494105073           -0.37871623 -0.3822536
+57870             -0.85086282     -0.07545071        -1.2223495023            0.81628074  0.6163145
+2986               1.39199637     -0.07545071        -0.5888078311           -0.23812835 -2.3793898
+29925             -0.73281760      0.12499781        -0.4530489016           -0.87077381 -0.3822536
+95246             -0.73281760     -0.07545071        -0.1589045543           -0.30842229  0.6163145
+103065            -0.02454628      0.12499781         0.5425165816           -0.73018593  1.6148826
+68293             -0.02454628     -0.07545071         0.5651430699            0.88657468  0.6163145
+62555              0.32958938     -0.07545071        -0.4530489016            0.53510498  0.6163145
+45404             -0.85086282     -0.07545071        -0.9734581315           -1.36283139 -0.3822536
+65161              0.09349894     -0.07545071         0.8140344407            0.60539892  0.6163145
+46435             -0.85086282     -0.07545071        -0.7698197372           -1.08165563 -0.3822536
+104474            -0.14259150      0.12499781        -0.3172899721            1.44892620  1.6148826
+9642              -0.14259150     -0.07545071         1.1760582528            0.88657468 -1.3808217
+          quarter state_Alabama state_Alaska state_Arizona state_Arkansas state_California
+51663   1.3066362    -0.1522391  -0.02335946    -0.1095485     -0.1186186       -0.2954762
+57870  -1.2756641    -0.1522391  -0.02335946    -0.1095485     -0.1186186       -0.2954762
+2986    1.3066362    -0.1522391  -0.02335946    -0.1095485     -0.1186186        3.3843247
+29925  -0.4148973    -0.1522391  -0.02335946    -0.1095485     -0.1186186       -0.2954762
+95246   1.3066362    -0.1522391  -0.02335946    -0.1095485     -0.1186186       -0.2954762
+103065 -1.2756641    -0.1522391  -0.02335946    -0.1095485     -0.1186186       -0.2954762
+68293  -0.4148973    -0.1522391  -0.02335946    -0.1095485     -0.1186186       -0.2954762
+62555  -1.2756641    -0.1522391  -0.02335946    -0.1095485     -0.1186186       -0.2954762
+45404   1.3066362    -0.1522391  -0.02335946    -0.1095485     -0.1186186       -0.2954762
+65161  -0.4148973    -0.1522391  -0.02335946    -0.1095485     -0.1186186       -0.2954762
+46435   1.3066362    -0.1522391  -0.02335946    -0.1095485     -0.1186186       -0.2954762
+104474 -1.2756641    -0.1522391  -0.02335946    -0.1095485     -0.1186186       -0.2954762
+9642   -0.4148973    -0.1522391  -0.02335946    -0.1095485     -0.1186186       -0.2954762
+       state_Colorado state_Connecticut state_Delaware state_District_of_Columbia state_Florida
+51663      -0.1266634        -0.1255736    -0.08697764               -0.005036521     -0.285490
+57870       7.8948418        -0.1255736    -0.08697764               -0.005036521     -0.285490
+2986       -0.1266634        -0.1255736    -0.08697764               -0.005036521     -0.285490
+29925      -0.1266634        -0.1255736    -0.08697764               -0.005036521     -0.285490
+95246      -0.1266634        -0.1255736    -0.08697764               -0.005036521     -0.285490
+103065     -0.1266634        -0.1255736    -0.08697764               -0.005036521     -0.285490
+68293      -0.1266634        -0.1255736    -0.08697764               -0.005036521     -0.285490
+62555      -0.1266634        -0.1255736    -0.08697764               -0.005036521     -0.285490
+45404      -0.1266634        -0.1255736    -0.08697764               -0.005036521     -0.285490
+65161      -0.1266634        -0.1255736    -0.08697764               -0.005036521     -0.285490
+46435      -0.1266634        -0.1255736    -0.08697764               -0.005036521     -0.285490
+104474     -0.1266634        -0.1255736    -0.08697764               -0.005036521     -0.285490
+9642       -0.1266634        -0.1255736    -0.08697764               -0.005036521     -0.285490
+       state_Georgia state_Hawaii state_Idaho state_Illinois state_Indiana state_Iowa state_Kansas
+51663     -0.2039273  -0.03952772 -0.06403638     -0.3214944    -0.1813311 -0.1080567   -0.1020719
+57870     -0.2039273  -0.03952772 -0.06403638     -0.3214944    -0.1813311 -0.1080567   -0.1020719
+2986      -0.2039273  -0.03952772 -0.06403638     -0.3214944    -0.1813311 -0.1080567   -0.1020719
+29925     -0.2039273  -0.03952772 -0.06403638     -0.3214944    -0.1813311 -0.1080567   -0.1020719
+95246     -0.2039273  -0.03952772 -0.06403638     -0.3214944    -0.1813311 -0.1080567   -0.1020719
+103065    -0.2039273  -0.03952772 -0.06403638     -0.3214944    -0.1813311 -0.1080567   -0.1020719
+68293     -0.2039273  -0.03952772 -0.06403638     -0.3214944    -0.1813311 -0.1080567   -0.1020719
+62555     -0.2039273  -0.03952772 -0.06403638     -0.3214944    -0.1813311 -0.1080567   -0.1020719
+45404     -0.2039273  -0.03952772 -0.06403638     -0.3214944     5.5147044 -0.1080567   -0.1020719
+65161     -0.2039273  -0.03952772 -0.06403638     -0.3214944    -0.1813311 -0.1080567   -0.1020719
+46435     -0.2039273  -0.03952772 -0.06403638     -0.3214944    -0.1813311 -0.1080567   -0.1020719
+104474    -0.2039273  -0.03952772 -0.06403638     -0.3214944    -0.1813311 -0.1080567   -0.1020719
+9642      -0.2039273  -0.03952772 -0.06403638     -0.3214944    -0.1813311 -0.1080567   -0.1020719
+       state_Kentucky state_Louisiana state_Maine state_Maryland state_Massachusetts state_Michigan
+51663     -0.06423576      -0.1894559 -0.06940642     -0.1406262         -0.08734696      -0.183410
+57870     -0.06423576      -0.1894559 -0.06940642     -0.1406262         -0.08734696      -0.183410
+2986      -0.06423576      -0.1894559 -0.06940642     -0.1406262         -0.08734696      -0.183410
+29925     -0.06423576      -0.1894559 -0.06940642     -0.1406262         -0.08734696      -0.183410
+95246     -0.06423576      -0.1894559 -0.06940642     -0.1406262         -0.08734696      -0.183410
+103065    -0.06423576      -0.1894559 -0.06940642     -0.1406262         -0.08734696      -0.183410
+68293     -0.06423576      -0.1894559 -0.06940642     -0.1406262         -0.08734696      -0.183410
+62555     -0.06423576      -0.1894559 -0.06940642     -0.1406262         -0.08734696      -0.183410
+45404     -0.06423576      -0.1894559 -0.06940642     -0.1406262         -0.08734696      -0.183410
+65161     -0.06423576      -0.1894559 -0.06940642     -0.1406262         -0.08734696      -0.183410
+46435     -0.06423576      -0.1894559 -0.06940642     -0.1406262         -0.08734696      -0.183410
+104474    -0.06423576      -0.1894559 -0.06940642      7.1109593         -0.08734696      -0.183410
+9642      -0.06423576      -0.1894559 -0.06940642     -0.1406262         -0.08734696      -0.183410
+       state_Minnesota state_Mississippi state_Missouri state_Montana state_Nebraska state_Nevada
+51663     -0.005036521        -0.1241066     -0.1848458    -0.0266599   -0.003561336  -0.09187715
+57870     -0.005036521        -0.1241066     -0.1848458    -0.0266599   -0.003561336  -0.09187715
+2986      -0.005036521        -0.1241066     -0.1848458    -0.0266599   -0.003561336  -0.09187715
+29925     -0.005036521        -0.1241066     -0.1848458    -0.0266599   -0.003561336  -0.09187715
+95246     -0.005036521        -0.1241066     -0.1848458    -0.0266599   -0.003561336  -0.09187715
+103065    -0.005036521        -0.1241066     -0.1848458    -0.0266599   -0.003561336  -0.09187715
+68293     -0.005036521        -0.1241066     -0.1848458    -0.0266599   -0.003561336  -0.09187715
+62555     -0.005036521        -0.1241066     -0.1848458    -0.0266599   -0.003561336  -0.09187715
+45404     -0.005036521        -0.1241066     -0.1848458    -0.0266599   -0.003561336  -0.09187715
+65161     -0.005036521        -0.1241066     -0.1848458    -0.0266599   -0.003561336  -0.09187715
+46435     -0.005036521        -0.1241066     -0.1848458    -0.0266599   -0.003561336  -0.09187715
+104474    -0.005036521        -0.1241066     -0.1848458    -0.0266599   -0.003561336  -0.09187715
+9642      -0.005036521        -0.1241066     -0.1848458    -0.0266599   -0.003561336  -0.09187715
+       state_New_Hampshire state_New_Jersey state_New_Mexico state_New_York state_North_Carolina
+51663          -0.03226585       -0.1562468      -0.09382261     -0.2190488           -0.1881229
+57870          -0.03226585       -0.1562468      -0.09382261     -0.2190488           -0.1881229
+2986           -0.03226585       -0.1562468      -0.09382261     -0.2190488           -0.1881229
+29925          -0.03226585       -0.1562468      -0.09382261     -0.2190488           -0.1881229
+95246          -0.03226585       -0.1562468      -0.09382261     -0.2190488           -0.1881229
+103065         -0.03226585       -0.1562468      -0.09382261     -0.2190488           -0.1881229
+68293          -0.03226585       -0.1562468      -0.09382261     -0.2190488            5.3156064
+62555          -0.03226585       -0.1562468      -0.09382261     -0.2190488           -0.1881229
+45404          -0.03226585       -0.1562468      -0.09382261     -0.2190488           -0.1881229
+65161          -0.03226585       -0.1562468      -0.09382261     -0.2190488           -0.1881229
+46435          -0.03226585       -0.1562468      -0.09382261     -0.2190488            5.3156064
+104474         -0.03226585       -0.1562468      -0.09382261     -0.2190488           -0.1881229
+9642           -0.03226585       -0.1562468      -0.09382261     -0.2190488           -0.1881229
+       state_North_Dakota state_Ohio state_Oklahoma state_Oregon state_Pennsylvania state_Rhode_Island
+51663         -0.05560113  -0.241851     -0.1287661   -0.1121861        -0.09950373        -0.06522367
+57870         -0.05560113  -0.241851     -0.1287661   -0.1121861        -0.09950373        -0.06522367
+2986          -0.05560113  -0.241851     -0.1287661   -0.1121861        -0.09950373        -0.06522367
+29925         -0.05560113  -0.241851     -0.1287661   -0.1121861        -0.09950373        -0.06522367
+95246         -0.05560113  -0.241851     -0.1287661   -0.1121861        -0.09950373        -0.06522367
+103065        -0.05560113   4.134725     -0.1287661   -0.1121861        -0.09950373        -0.06522367
+68293         -0.05560113  -0.241851     -0.1287661   -0.1121861        -0.09950373        -0.06522367
+62555         -0.05560113   4.134725     -0.1287661   -0.1121861        -0.09950373        -0.06522367
+45404         -0.05560113  -0.241851     -0.1287661   -0.1121861        -0.09950373        -0.06522367
+65161         -0.05560113  -0.241851     -0.1287661   -0.1121861        -0.09950373        -0.06522367
+46435         -0.05560113  -0.241851     -0.1287661   -0.1121861        -0.09950373        -0.06522367
+104474        -0.05560113  -0.241851     -0.1287661   -0.1121861        -0.09950373        -0.06522367
+9642          -0.05560113  -0.241851     -0.1287661   -0.1121861        -0.09950373        -0.06522367
+       state_South_Carolina state_South_Dakota state_Tennessee state_Texas  state_Utah state_Virginia
+51663            -0.1752344        -0.05560113      -0.1860897  -0.2094317 -0.07785188     -0.1551358
+57870            -0.1752344        -0.05560113      -0.1860897  -0.2094317 -0.07785188     -0.1551358
+2986             -0.1752344        -0.05560113      -0.1860897  -0.2094317 -0.07785188     -0.1551358
+29925            -0.1752344        -0.05560113       5.3736841  -0.2094317 -0.07785188     -0.1551358
+95246            -0.1752344        -0.05560113      -0.1860897  -0.2094317 -0.07785188     -0.1551358
+103065           -0.1752344        -0.05560113      -0.1860897  -0.2094317 -0.07785188     -0.1551358
+68293            -0.1752344        -0.05560113      -0.1860897  -0.2094317 -0.07785188     -0.1551358
+62555            -0.1752344        -0.05560113      -0.1860897  -0.2094317 -0.07785188     -0.1551358
+45404            -0.1752344        -0.05560113      -0.1860897  -0.2094317 -0.07785188     -0.1551358
+65161            -0.1752344        -0.05560113       5.3736841  -0.2094317 -0.07785188     -0.1551358
+46435            -0.1752344        -0.05560113      -0.1860897  -0.2094317 -0.07785188     -0.1551358
+104474           -0.1752344        -0.05560113      -0.1860897  -0.2094317 -0.07785188     -0.1551358
+9642              5.7065694        -0.05560113      -0.1860897  -0.2094317 -0.07785188     -0.1551358
+       state_Washington state_West_Virginia state_Wisconsin state_Wyoming  month_Jan  month_Feb
+51663        -0.1383583         -0.08719941       6.5969306   -0.04321894 -0.3427762 -0.3023243
+57870        -0.1383583         -0.08719941      -0.1515837   -0.04321894 -0.3427762  3.3076647
+2986         -0.1383583         -0.08719941      -0.1515837   -0.04321894 -0.3427762 -0.3023243
+29925        -0.1383583         -0.08719941      -0.1515837   -0.04321894 -0.3427762 -0.3023243
+95246        -0.1383583         -0.08719941       6.5969306   -0.04321894 -0.3427762 -0.3023243
+103065       -0.1383583         -0.08719941      -0.1515837   -0.04321894  2.9173187 -0.3023243
+68293        -0.1383583         -0.08719941      -0.1515837   -0.04321894 -0.3427762 -0.3023243
+62555        -0.1383583         -0.08719941      -0.1515837   -0.04321894 -0.3427762 -0.3023243
+45404        -0.1383583         -0.08719941      -0.1515837   -0.04321894 -0.3427762 -0.3023243
+65161        -0.1383583         -0.08719941      -0.1515837   -0.04321894 -0.3427762 -0.3023243
+46435        -0.1383583         -0.08719941      -0.1515837   -0.04321894 -0.3427762 -0.3023243
+104474       -0.1383583         -0.08719941      -0.1515837   -0.04321894  2.9173187 -0.3023243
+9642         -0.1383583         -0.08719941      -0.1515837   -0.04321894 -0.3427762 -0.3023243
+        month_Mar month_Apr  month_May  month_Jun  month_Jul  month_Aug  month_Sep  month_Oct
+51663  -0.3282463 -0.273329 -0.2796806 -0.2689354 -0.2804706 -0.3107177 -0.2939257 -0.3073932
+57870  -0.3282463 -0.273329 -0.2796806 -0.2689354 -0.2804706 -0.3107177 -0.2939257 -0.3073932
+2986   -0.3282463 -0.273329 -0.2796806 -0.2689354 -0.2804706 -0.3107177 -0.2939257  3.2531208
+29925  -0.3282463 -0.273329  3.5754620 -0.2689354 -0.2804706 -0.3107177 -0.2939257 -0.3073932
+95246  -0.3282463 -0.273329 -0.2796806 -0.2689354 -0.2804706 -0.3107177 -0.2939257 -0.3073932
+103065 -0.3282463 -0.273329 -0.2796806 -0.2689354 -0.2804706 -0.3107177 -0.2939257 -0.3073932
+68293  -0.3282463  3.658549 -0.2796806 -0.2689354 -0.2804706 -0.3107177 -0.2939257 -0.3073932
+62555   3.0464543 -0.273329 -0.2796806 -0.2689354 -0.2804706 -0.3107177 -0.2939257 -0.3073932
+45404  -0.3282463 -0.273329 -0.2796806 -0.2689354 -0.2804706 -0.3107177 -0.2939257 -0.3073932
+65161  -0.3282463  3.658549 -0.2796806 -0.2689354 -0.2804706 -0.3107177 -0.2939257 -0.3073932
+46435  -0.3282463 -0.273329 -0.2796806 -0.2689354 -0.2804706 -0.3107177 -0.2939257 -0.3073932
+104474 -0.3282463 -0.273329 -0.2796806 -0.2689354 -0.2804706 -0.3107177 -0.2939257 -0.3073932
+9642   -0.3282463  3.658549 -0.2796806 -0.2689354 -0.2804706 -0.3107177 -0.2939257 -0.3073932
+        month_Nov  month_Dec weekday_Sun weekday_Mon weekday_Tue weekday_Wed weekday_Thu weekday_Fri
+51663  -0.3001453  3.0890231  -0.4218611  -0.4058414  -0.4067101  -0.4113577    2.494555  -0.3982641
+57870  -0.3001453 -0.3237228  -0.4218611  -0.4058414  -0.4067101  -0.4113577   -0.400868   2.5108646
+2986   -0.3001453 -0.3237228  -0.4218611  -0.4058414  -0.4067101  -0.4113577    2.494555  -0.3982641
+29925  -0.3001453 -0.3237228  -0.4218611   2.4639853  -0.4067101  -0.4113577   -0.400868  -0.3982641
+95246   3.3316774 -0.3237228  -0.4218611  -0.4058414  -0.4067101   2.4309434   -0.400868  -0.3982641
+103065 -0.3001453 -0.3237228  -0.4218611  -0.4058414  -0.4067101  -0.4113577   -0.400868  -0.3982641
+68293  -0.3001453 -0.3237228  -0.4218611  -0.4058414   2.4587226  -0.4113577   -0.400868  -0.3982641
+62555  -0.3001453 -0.3237228   2.3704186  -0.4058414  -0.4067101  -0.4113577   -0.400868  -0.3982641
+45404   3.3316774 -0.3237228  -0.4218611   2.4639853  -0.4067101  -0.4113577   -0.400868  -0.3982641
+65161  -0.3001453 -0.3237228  -0.4218611  -0.4058414  -0.4067101   2.4309434   -0.400868  -0.3982641
+46435   3.3316774 -0.3237228  -0.4218611  -0.4058414  -0.4067101  -0.4113577    2.494555  -0.3982641
+104474 -0.3001453 -0.3237228  -0.4218611  -0.4058414  -0.4067101   2.4309434   -0.400868  -0.3982641
+9642   -0.3001453 -0.3237228  -0.4218611  -0.4058414  -0.4067101  -0.4113577    2.494555  -0.3982641
+       weekday_Sat total_casualties
+51663   -0.4126214                0
+57870   -0.4126214                0
+2986    -0.4126214                0
+29925   -0.4126214                1
+95246   -0.4126214                0
+103065   2.4234986                0
+68293   -0.4126214                0
+62555   -0.4126214                1
+45404   -0.4126214                1
+65161   -0.4126214                0
+46435   -0.4126214                1
+104474  -0.4126214                0
+9642    -0.4126214                1
+ [ reached getOption("max.print") -- omitted 78832 rows ]
+> train_labels
+   [1] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+  [50] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0
+  [99] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ [148] 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ [197] 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ [246] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0
+ [295] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0
+ [344] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ [393] 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+ [442] 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0
+ [491] 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+ [540] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0
+ [589] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ [638] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ [687] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0
+ [736] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ [785] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ [834] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ [883] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ [932] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ [981] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+ [ reached getOption("max.print") -- omitted 77845 entries ]
+> # Check class imbalance
+> class_ratio <- sum(train_labels == 0) / sum(train_labels == 1)
+> # Create lightgbm dataset
+> lgb_train <- lgb.Dataset(data = train_matrix, label = train_labels)
+> # Train the lightgbm model with early stopping and class weighting
+> lgb_model <- lgb.train(
++   params = list(
++     objective = "binary",
++     metric = "auc",
++     learning_rate = 0.1,
++     num_leaves = 31,
++     max_depth = 3,
++     scale_pos_weight = class_ratio  # Adjust for class imbalance
++   ),
++   data = lgb_train,
++   nrounds = 100,
++   valids = list(test = lgb.Dataset(data = test_matrix, label = test_labels)),
++   early_stopping_rounds = 10
++ )
+[LightGBM] [Info] Number of positive: 1974, number of negative: 76871
+[LightGBM] [Info] Auto-choosing row-wise multi-threading, the overhead of testing was 0.017334 seconds.
+You can set `force_row_wise=true` to remove the overhead.
+And if memory is not enough, you can set `force_col_wise=true`.
+[LightGBM] [Info] Total Bins 649
+[LightGBM] [Info] Number of data points in the train set: 78845, number of used features: 73
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.025036 -> initscore=-3.662067
+[LightGBM] [Info] Start training from score -3.662067
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[1]:  test's auc:1 
+Will train until there is no improvement in 10 rounds.
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[2]:  test's auc:1 
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[3]:  test's auc:1 
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[4]:  test's auc:1 
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[5]:  test's auc:1 
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[6]:  test's auc:1 
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[7]:  test's auc:1 
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[8]:  test's auc:1 
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[9]:  test's auc:1 
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[10]:  test's auc:1 
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[11]:  test's auc:1 
+Early stopping, best iteration is: [1]:  test's auc:1
+> # Make predictions on the test set
+> lgb_predictions_prob <- predict(lgb_model, test_matrix)
+> lgb_predictions <- ifelse(lgb_predictions_prob > 0.5, 1, 0)
+> lgb_predictions_factor <- factor(lgb_predictions, levels = c(0, 1))
+> # Evaluate model performance on the test set
+> lgb_confusion_matrix <- confusionMatrix(lgb_predictions_factor, test_data_scaled$high_casualty)
+> print(lgb_confusion_matrix)
+     [,1]  [,2]
+[1,]    0     0
+[2,]    0 32906
+> # Calculate precision, recall, and F1 score
+> confusion_matrix <- table(test_data_scaled$high_casualty, lgb_predictions_factor)
+> true_negatives <- confusion_matrix[1, 1]
+> false_positives <- confusion_matrix[1, 2]
+> false_negatives <- confusion_matrix[2, 1]
+> true_positives <- confusion_matrix[2, 2]
+> precision <- true_positives / (true_positives + false_positives)
+> recall <- true_positives / (true_positives + false_negatives)
+> f1_score <- 2 * (precision * recall) / (precision + recall)
+> cat("Precision:", round(precision, 4), "\n")
+Precision: 1 
+> cat("Recall:", round(recall, 4), "\n")
+Recall: 1 
+> cat("F1 Score:", round(f1_score, 4), "\n")
+F1 Score: 1 
+> # Make predictions on the training set
+> lgb_train_predictions_prob <- predict(lgb_model, train_matrix)
+> lgb_train_predictions <- ifelse(lgb_train_predictions_prob > 0.5, 1, 0)
+> lgb_train_predictions_factor <- factor(lgb_train_predictions, levels = c(0, 1))
+> # Evaluate performance on the training set
+> train_confusion_matrix <- confusionMatrix(lgb_train_predictions_factor, train_data_scaled$high_casualty)
+> print(train_confusion_matrix)
+     [,1]  [,2]
+[1,]    0     0
+[2,]    0 76871
+> # Cross-Validation using LightGBM's built-in CV function
+> cv_results <- lgb.cv(
++   params = list(
++     objective = "binary",
++     metric = "auc",
++     learning_rate = 0.1,
++     num_leaves = 31,
++     max_depth = 3,
++     scale_pos_weight = class_ratio
++   ),
++   data = lgb_train,
++   nrounds = 100,
++   nfold = 5,
++   stratified = TRUE,
++   early_stopping_rounds = 10,
++   verbose = 0
++ )
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+[LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+> # Print the best number of rounds
+> cat("Best number of boosting rounds:", cv_results$best_iter, "\n")
+Best number of boosting rounds: 1 
+> #----------------------- K-Nearest Neighbors -----------------------#
+> library(class)
+> # Train the KNN model
+> knn_predictions <- knn(
++   train = train_data_scaled[, -which(names(train_data_scaled) %in% "high_casualty")],
++   test = test_data_scaled[, -which(names(test_data_scaled) %in% "high_casualty")],
++   cl = train_data_scaled$high_casualty,
++   k = 5
++ )
+> # Evaluate model performance
+> knn_confusion_matrix <- confusionMatrix(knn_predictions, test_data_scaled$high_casualty)
+> print(knn_confusion_matrix)
+     [,1]  [,2]
+[1,]    0     0
+[2,]    0 33709
