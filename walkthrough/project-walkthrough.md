@@ -27,7 +27,7 @@ I also looked at Kaggle notebooks and discussion posts to improve my approach, e
 
 See:
 - [`../contribution-note.md`](../contribution-note.md)
-- [`../archive/individual-reflection.pdf`](../archive/individual-reflection.pdf)
+- [`../archive/reflection/individual-reflection.pdf`](../archive/reflection/individual-reflection.pdf)
 
 ## 3. Business Problem
 
@@ -66,13 +66,6 @@ This made the project a mix of descriptive analysis and basic predictive modelin
 - incident_characteristics
 
 ### Data note
-The original script reads the file as:
-
-```r
-gun_data <- read.csv("C:/Users/akbak/Downloads/gun-violence-data_01-2013_03-2018.csv")
-```
-
-For this GitHub version, I recommend using a relative path instead, such as:
 
 ```r
 gun_data <- read.csv("data/raw/gun-violence-data_01-2013_03-2018.csv")
@@ -89,7 +82,7 @@ If the raw dataset is not included in the repo, please check:
 - **Main public write-up focus:** EDA, word cloud analysis, and Random Forest summary
 
 See:
-- [`../scripts/01_gun_violence_full_analysis.R`](../scripts/01_gun_violence_full_analysis.R)
+- [`../scripts/01_full_analysis.R`](../scripts/01_full_analysis.R)
 - [`../scripts/packages-used.md`](../scripts/packages-used.md)
 
 ## 6. Workflow
@@ -111,13 +104,13 @@ My project flow was:
 ## 7. Selected Code References
 
 ### Full analysis script
-- [`../scripts/01_gun_violence_full_analysis.R`](../scripts/01_gun_violence_full_analysis.R)
+- [`../scripts/01_full_analysis.R`](../scripts/01_full_analysis.R)
 
 ### Report source
 - [`../scripts/02_final_report_source.Rmd`](../scripts/02_final_report_source.Rmd)
 
 ### Original model output
-- [`../archive/original-model-output.txt`](../archive/original-model-output.txt)
+- [`../archive/model-output/model-output.txt`](../archive/model-output/model-output.txt)
 
 ## 8. Key EDA Findings
 
@@ -203,7 +196,7 @@ This suggests that time and geographic context mattered a lot in the model.
 
 See:
 - [`../outputs/figures/selected/roc-curve.jpeg`](../outputs/figures/selected/roc-curve.jpeg)
-- [`../archive/original-model-output.txt`](../archive/original-model-output.txt)
+- [`../archive/model-output/model-output.txt`](../archive/model-output/model-output.txt)
 
 ## 12. Limitations
 
@@ -234,7 +227,7 @@ If you want the shortest path through this repo, I suggest this order:
 2. [`../reports/portfolio-project-summary.pdf`](../reports/portfolio-project-summary.pdf)
 3. [`../reports/final-report.pdf`](../reports/final-report.pdf)
 4. [`../outputs/figures/selected/`](../outputs/figures/selected/)
-5. [`../scripts/01_gun_violence_full_analysis.R`](../scripts/01_gun_violence_full_analysis.R)
+5. [`../scripts/01_full_analysis.R`](../scripts/01_full_analysis.R)
 6. [`../data/README.md`](../data/README.md)
 
 ## 15. Short Interview Version

@@ -27,16 +27,6 @@ I left the raw CSV out of the public repo for three reasons:
 3. Open `scripts/01_full_analysis.R`.
 4. Make sure the file path points to the file above.
 
-## Path Update for This Public Repo
-
-The original course script used a local Windows path:
-
-`C:/Users/akbak/Downloads/gun-violence-data_01-2013_03-2018.csv`
-
-For this repo, I recommend updating it to:
-
-`data/raw/gun-violence-data_01-2013_03-2018.csv`
-
 ## Version Note
 
 The public Kaggle page may describe the dataset with a different total number of incidents than the exact project file I used.
