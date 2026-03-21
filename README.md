@@ -228,17 +228,6 @@ If you want the shortest path through this repo, I suggest this order:
 
 ---
 
-## Dataset Note
-
-The main dataset used in this project is the **Gun Violence Dataset** from Kaggle.
-
-The original analysis script uses a local CSV path. In this public repo, I do not require the raw dataset to be committed by default.
-
-Please check:
-- [Dataset note](data/README.md)
-
----
-
 ## Original Project Materials
 
 This repository keeps both a cleaner portfolio version and original course materials.
