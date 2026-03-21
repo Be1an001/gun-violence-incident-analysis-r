@@ -215,41 +215,6 @@ This project has some clear limitations:
 
 ---
 
-## Repository Structure
-
-```text
-gun-violence-incident-analysis-r/
-├─ README.md
-├─ contribution-note.md
-├─ data/
-│  └─ README.md
-├─ scripts/
-│  ├─ 01_full_analysis.R
-│  ├─ 02_final_report_source.Rmd
-│  ├─ README.md
-│  └─ packages-used.md
-├─ walkthrough/
-│  └─ project-walkthrough.md
-├─ outputs/
-│  ├─ README.md
-│  └─ figures/
-│     ├─ selected/
-│     └─ full-set/
-├─ reports/
-│  ├─ final-report.pdf
-│  └─ portfolio-project-summary.pdf
-├─ slides/
-│  └─ original-presentation.pdf
-└─ archive/
-   ├─ README.md
-   ├─ reflection/
-   │  └─ individual-reflection.pdf
-   └─ model-output/
-      └─ model-output.txt
-```
-
----
-
 ## Files to Read First
 
 If you want the shortest path through this repo, I suggest this order:
