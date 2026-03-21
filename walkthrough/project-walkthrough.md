@@ -129,17 +129,47 @@ Most participants were marked as unharmed, then injured, arrested, and killed. T
 ### E. Location words showed common environments
 The most common location words included apartments, parks, schools, and neighborhoods.
 
-See selected figures:
-- [`../outputs/figures/selected/top-states-by-incident-frequency.jpeg`](../outputs/figures/selected/top-states-by-incident-frequency.jpeg)
-- [`../outputs/figures/selected/number-of-incidents-by-year-2013-2018.jpeg`](../outputs/figures/selected/number-of-incidents-by-year-2013-2018.jpeg)
-- [`../outputs/figures/selected/incidents-by-month-2014-2018.jpeg`](../outputs/figures/selected/incidents-by-month-2014-2018.jpeg)
-- [`../outputs/figures/selected/incidents-by-weekday.jpeg`](../outputs/figures/selected/incidents-by-weekday.jpeg)
-- [`../outputs/figures/selected/top-10-cities-by-number-of-incidents.jpeg`](../outputs/figures/selected/top-10-cities-by-number-of-incidents.jpeg)
-- [`../outputs/figures/selected/distribution-of-participant-statuses.jpeg`](../outputs/figures/selected/distribution-of-participant-statuses.jpeg)
-- [`../outputs/figures/selected/top-10-most-common-participant-ages.jpeg`](../outputs/figures/selected/top-10-most-common-participant-ages.jpeg)
-- [`../outputs/figures/selected/gender-distribution-of-participants.jpeg`](../outputs/figures/selected/gender-distribution-of-participants.jpeg)
-- [`../outputs/figures/selected/wordcloud-1.jpeg`](../outputs/figures/selected/wordcloud-1.jpeg)
-- [`../outputs/figures/selected/wordcloud-2.jpeg`](../outputs/figures/selected/wordcloud-2.jpeg)
+### Time and trend visuals
+
+<p align="center">
+  <img src="../outputs/figures/selected/number-of-incidents-by-year-2013-2018.jpeg" alt="Number of incidents by year" width="48%">
+  <img src="../outputs/figures/selected/incidents-by-month-2014-2018.jpeg" alt="Incidents by month" width="48%">
+</p>
+
+<p align="center">
+  <img src="../outputs/figures/selected/incidents-by-weekday.jpeg" alt="Incidents by weekday" width="48%">
+  <img src="../outputs/figures/selected/incidents-by-quarter-and-year.jpeg" alt="Incidents by quarter and year" width="48%">
+</p>
+
+### Geography visuals
+
+<p align="center">
+  <img src="../outputs/figures/selected/top-states-by-incident-frequency.jpeg" alt="Top states by incident frequency" width="48%">
+  <img src="../outputs/figures/selected/top-10-cities-by-number-of-incidents.jpeg" alt="Top cities by number of incidents" width="48%">
+</p>
+
+<p align="center">
+  <img src="../outputs/figures/selected/number-of-gun-incidents-by-state-in-the-us.jpeg" alt="Gun incidents by state in the US" width="70%">
+</p>
+
+### Participant visuals
+
+<p align="center">
+  <img src="../outputs/figures/selected/distribution-of-participant-statuses.jpeg" alt="Distribution of participant statuses" width="48%">
+  <img src="../outputs/figures/selected/top-10-most-common-participant-ages.jpeg" alt="Top participant ages" width="48%">
+</p>
+
+<p align="center">
+  <img src="../outputs/figures/selected/gender-distribution-of-participants.jpeg" alt="Gender distribution of participants" width="48%">
+  <img src="../outputs/figures/selected/top-10-most-common-incident-characteristics.jpeg" alt="Top incident characteristics" width="48%">
+</p>
+
+### Word cloud visuals
+
+<p align="center">
+  <img src="../outputs/figures/selected/wordcloud-1.jpeg" alt="Wordcloud 1" width="48%">
+  <img src="../outputs/figures/selected/wordcloud-2.jpeg" alt="Wordcloud 2" width="48%">
+</p>
 
 ## 9. Feature Engineering for Modeling
 
@@ -181,6 +211,13 @@ The model looked strong on accuracy, but it still missed many true high-casualty
 ### Important public note
 Some values shown in the original presentation slides are much higher than the final report version. I keep the slide deck in this repo as an original course artifact, but the public project story here follows the final report and original script more conservatively.
 
+### Model evaluation visual
+
+<p align="center">
+  <img src="../outputs/figures/selected/roc-curve.jpeg" alt="ROC curve" width="48%">
+  <img src="../outputs/figures/selected/auc-of-pr-curve.jpeg" alt="Precision recall curve" width="48%">
+</p>
+
 ## 11. Main Insights From the Model
 
 The final report highlighted these important factors:
@@ -195,7 +232,6 @@ The final report highlighted these important factors:
 This suggests that time and geographic context mattered a lot in the model.
 
 See:
-- [`../outputs/figures/selected/roc-curve.jpeg`](../outputs/figures/selected/roc-curve.jpeg)
 - [`../archive/model-output/model-output.txt`](../archive/model-output/model-output.txt)
 
 ## 12. Limitations

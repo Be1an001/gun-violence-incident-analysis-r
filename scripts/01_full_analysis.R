@@ -8,7 +8,7 @@ library(scales)
 library(splitstackshape)
 
 # Loading the dataset as a dataframe
-gun_data <- read.csv("C:/Users/akbak/Downloads/gun-violence-data_01-2013_03-2018.csv")
+gun_data <- read.csv("C:/data/raw/gun-violence-data_01-2013_03-2018.csv")
 
 # Summary of the dataset
 summary(gun_data)

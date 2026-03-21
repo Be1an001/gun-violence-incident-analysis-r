@@ -1,228 +1,297 @@
-# \# Gun Violence Incident Analysis in R
+# Gun Violence Incident Analysis in R
 
-# 
+This repository is a cleaned portfolio version of my ALY6040 Data Mining final project at Northeastern University.
 
-# This repo is a cleaned public version of my Fall 2024 ALY6040 Data Mining final project at Northeastern University. I used a U.S. gun violence incident dataset to study time patterns, location patterns, participant details, and high-casualty incident risk.
+I used a public U.S. gun violence dataset to study patterns in incidents from January 2013 to March 2018. My goal was to understand where incidents were more common, when they happened more often, what participant patterns showed up, and how well different models could identify higher-casualty incidents.
 
-# 
+This repo is meant to be easy for HR, interviewers, and GitHub visitors to read. I kept the main story simple, but I also kept the original files so the project still feels real and traceable.
 
-# \## Quick Links
+---
 
-# 
+## Project Snapshot
 
-# \- \[Project walkthrough](walkthrough/project-walkthrough.md)
+- **Course:** ALY6040 - Data Mining
+- **Project type:** Individual course project
+- **Language:** R
+- **Dataset:** Gun Violence Dataset from Kaggle
+- **Time range:** January 2013 to March 2018
+- **Data size:** 239,677 rows, 29 columns
+- **Main work:** data cleaning, EDA, participant-series parsing, word cloud analysis, feature engineering, model comparison, report writing
 
-# \- \[Final report](reports/ALY6040\_Gun\_Violence\_Final\_Report.pdf)
+---
 
-# \- \[Presentation slides](slides/ALY6040\_Gun\_Violence\_Presentation.pdf)
+## Business Problem
 
-# \- \[Original R script](scripts/01\_full\_analysis.R)
+This project started from four main questions:
 
-# \- \[Data note](data/README.md)
+1. What factors may predict more severe incidents?
+2. Are there times of the year when incidents happen more often?
+3. Which incidents are more likely to have multiple casualties?
+4. How do local factors connect to high incident rates in some states?
 
-# \- \[Data dictionary](data/data-dictionary.md)
+So this project was not only about summary charts. It also included a basic predictive modeling task.
 
-# \- \[Contribution note](contribution-note.md)
+---
 
-# \- \[Version note](archive/notes/version-note.md)
+## My Role
 
-# 
+This was an individual project.
 
-# \## Project Background
+I completed the analysis and report on my own. My main work included:
 
-# 
+- cleaning the dataset
+- checking missing values and duplicates
+- building time-based features
+- analyzing location and participant patterns
+- parsing multi-value participant fields
+- creating word clouds from location descriptions
+- building and comparing models
+- writing the final report
 
-# This was my Module 6 final project for \*\*ALY6040: Data Mining\*\*. I wanted to understand what patterns show up in gun violence incidents and what factors may be related to more severe cases.
+I also reviewed Kaggle notebooks and discussion posts to improve my ideas for handling the dataset and model testing.
 
-# 
+See:
+- [Contribution note](contribution-note.md)
+- [Individual reflection](archive/reflection/individual-reflection.pdf)
 
-# My original project focused on these questions:
+---
 
-# 
+## Tools and Methods
 
-# 1\. What factors predict severe incidents?
+### Tools
+- R
+- tidyverse
+- lubridate
+- ggplot2
+- splitstackshape
+- tidytext
+- wordcloud
+- caret
+- fastDummies
+- randomForest
 
-# 2\. Are there times of the year when incidents are more likely?
+### Methods
+- data cleaning
+- missing value review
+- outlier checking
+- exploratory data analysis
+- participant-series parsing
+- text mining with word clouds
+- feature engineering
+- train/test split
+- model comparison
 
-# 3\. Which incidents are more likely to have multiple casualties?
+### Models tested
+- Logistic Regression
+- KNN
+- LightGBM
+- Random Forest
 
-# 4\. How do local factors relate to high incident rates in certain states?
+---
 
-# 
+## Project Workflow
 
-# \## Dataset
+1. Load the dataset  
+2. Review data types, unique values, missing values, and duplicates  
+3. Explore outliers in `n_killed` and `n_injured`  
+4. Create year, quarter, month, and weekday features  
+5. Analyze incidents by state, city, month, quarter, and weekday  
+6. Parse participant-related string fields into usable rows  
+7. Build word clouds from `location_description`  
+8. Create `total_casualties`  
+9. Create `high_casualty` as a binary target  
+10. Test several models  
+11. Compare results and write recommendations  
 
-# 
+---
 
-# \- \*\*Source:\*\* Kaggle - Gun Violence Data
+## Selected Visuals
 
-# \- \*\*Project file used:\*\* `gun-violence-data\_01-2013\_03-2018.csv`
+### Time Patterns
 
-# \- \*\*Time range:\*\* January 2013 to March 2018
+<p align="center">
+  <img src="outputs/figures/selected/number-of-incidents-by-year-2013-2018.jpeg" alt="Number of incidents by year" width="48%">
+  <img src="outputs/figures/selected/incidents-by-month-2014-2018.jpeg" alt="Incidents by month" width="48%">
+</p>
 
-# \- \*\*Size used in this project:\*\* 239,677 rows and 29 columns
+<p align="center">
+  <img src="outputs/figures/selected/incidents-by-weekday.jpeg" alt="Incidents by weekday" width="48%">
+  <img src="outputs/figures/selected/incidents-by-quarter-and-year.jpeg" alt="Incidents by quarter and year" width="48%">
+</p>
 
-# \- \*\*Public repo note:\*\* the raw CSV is not included in this repo. See \[data/README.md](data/README.md).
+### Geography Patterns
 
-# 
+<p align="center">
+  <img src="outputs/figures/selected/top-states-by-incident-frequency.jpeg" alt="Top states by incident frequency" width="48%">
+  <img src="outputs/figures/selected/top-10-cities-by-number-of-incidents.jpeg" alt="Top cities by number of incidents" width="48%">
+</p>
 
-# \## What I Did
+<p align="center">
+  <img src="outputs/figures/selected/number-of-gun-incidents-by-state-in-the-us.jpeg" alt="Gun incidents by state in the US" width="70%">
+</p>
 
-# 
+### Participant and Text Patterns
 
-# \- cleaned the data and checked missing values, duplicates, and outliers
+<p align="center">
+  <img src="outputs/figures/selected/distribution-of-participant-statuses.jpeg" alt="Distribution of participant statuses" width="48%">
+  <img src="outputs/figures/selected/top-10-most-common-participant-ages.jpeg" alt="Top participant ages" width="48%">
+</p>
 
-# \- created time-based features such as year, quarter, month, day, and weekday
+<p align="center">
+  <img src="outputs/figures/selected/gender-distribution-of-participants.jpeg" alt="Gender distribution of participants" width="48%">
+  <img src="outputs/figures/selected/top-10-most-common-incident-characteristics.jpeg" alt="Top incident characteristics" width="48%">
+</p>
 
-# \- analyzed state, city, participant, and incident-characteristic patterns
+<p align="center">
+  <img src="outputs/figures/selected/wordcloud-1.jpeg" alt="Wordcloud 1" width="48%">
+  <img src="outputs/figures/selected/wordcloud-2.jpeg" alt="Wordcloud 2" width="48%">
+</p>
 
-# \- used word clouds on `location\_description`
+---
 
-# \- created `total\_casualties` and `high\_casualty`
+## Key Findings
 
-# \- tested several models and used Random Forest as the main final model in the report
+### 1. Incident counts increased from 2014 to 2017
+The yearly trend showed a steady increase before the partial 2018 period.
 
-# \- wrote the final report and kept the original project materials
+### 2. Time patterns were clear
+Incidents were more frequent on weekends, especially Sunday and Saturday. January, March, and summer months also showed higher counts.
 
-# 
+### 3. Geographic concentration was strong
+Illinois, California, Florida, and Texas had high incident counts. Chicago stood out as the top city.
 
-# \## Main Findings
+### 4. Participant patterns were also strong
+Many participants were marked as unharmed, injured, or arrested. The most common ages were around 18 to 26, and most participants were male.
 
-# 
+### 5. Location descriptions gave extra context
+Common words like apartments, parks, schools, and neighborhoods showed up often in the word cloud analysis.
 
-# \- incidents increased from 2014 to 2017
+---
 
-# \- Illinois, California, Florida, and Texas had the highest incident counts
+## Modeling Note
 
-# \- Chicago stood out as the top city by incident count
+To represent incident severity, I created:
 
-# \- incidents were more frequent on weekends
+```r
+gun_data_encoded$total_casualties <- gun_data_encoded$n_killed + gun_data_encoded$n_injured
+gun_data_encoded$high_casualty <- ifelse(gun_data_encoded$total_casualties >= 3, 1, 0)
+```
 
-# \- January, March, and summer months were relatively high
+I tested Logistic Regression, KNN, LightGBM, and Random Forest.
 
-# \- many participants were male, and common ages were around 18 to 26
+For this public GitHub version, I use the **final report version** as the main modeling reference, because it is the most complete written version and it matches the main R workflow more closely.
 
-# \- location words such as apartments, parks, schools, and neighborhoods appeared often
+### Main takeaway
+Random Forest was the strongest model among the tested options, but the class imbalance problem was still serious.
 
-# \- the final Random Forest model had high accuracy but weak recall for high-casualty cases
+### Final report metrics used here
+- **Accuracy:** 97.45%
+- **Precision:** 86.67%
+- **Recall:** 2.94%
+- **F1 Score:** 5.68%
 
-# 
+### What this means
+The model looked strong on accuracy, but it still missed many true high-casualty incidents. So the model was useful as a learning result, but not strong enough for a real decision system.
 
-# \## Model Note
+<p align="center">
+  <img src="outputs/figures/selected/roc-curve.jpeg" alt="ROC curve" width="48%">
+  <img src="outputs/figures/selected/auc-of-pr-curve.jpeg" alt="Precision recall curve" width="48%">
+</p>
 
-# 
+### Important note
+Some values shown in the original presentation slides are much higher than the final report version. I keep the slide deck in this repo as an original course artifact, but the public project summary here follows the final report and original script more conservatively.
 
-# The final report version of the Random Forest model showed:
+---
 
-# 
+## Limitations
 
-# \- Accuracy: 97.45%
+This project has some clear limitations:
 
-# \- Precision: 86.67%
+- strong class imbalance in the target
+- missing values in several columns
+- limited external context variables
+- some model versions took a long time to run
+- some slide materials reflect an earlier or different experiment version and should not be treated as the final public reference
 
-# \- Recall: 2.94%
+---
 
-# \- F1 score: 5.68%
+## Repository Structure
 
-# 
+```text
+gun-violence-incident-analysis-r/
+├─ README.md
+├─ contribution-note.md
+├─ data/
+│  └─ README.md
+├─ scripts/
+│  ├─ 01_full_analysis.R
+│  ├─ 02_final_report_source.Rmd
+│  ├─ README.md
+│  └─ packages-used.md
+├─ walkthrough/
+│  └─ project-walkthrough.md
+├─ outputs/
+│  ├─ README.md
+│  └─ figures/
+│     ├─ selected/
+│     └─ full-set/
+├─ reports/
+│  ├─ final-report.pdf
+│  └─ portfolio-project-summary.pdf
+├─ slides/
+│  └─ original-presentation.pdf
+└─ archive/
+   ├─ README.md
+   ├─ reflection/
+   │  └─ individual-reflection.pdf
+   └─ model-output/
+      └─ model-output.txt
+```
 
-# So I do \*\*not\*\* present this as a strong finished prediction product. I present it as a strong end-to-end analysis project with an honest model limitation.
+---
 
-# 
+## Files to Read First
 
-# \## Important Note on Source Files
+If you want the shortest path through this repo, I suggest this order:
 
-# 
+1. [Project walkthrough](walkthrough/project-walkthrough.md)
+2. [Portfolio project summary PDF](reports/portfolio-project-summary.pdf)
+3. [Original final report](reports/final-report.pdf)
+4. [Selected figures](outputs/figures/selected/)
+5. [Full R analysis script](scripts/01_full_analysis.R)
+6. [Dataset note](data/README.md)
 
-# This repo keeps the final report, the original R script, selected figures, and the original slide deck.
+---
 
-# 
+## Dataset Note
 
-# For the public summary, I follow the \*\*final report\*\* and the \*\*main R workflow\*\*. The slide deck is kept as an original class deliverable, and some modeling slides reflect an earlier or alternate experiment version. I added a short note here:
+The main dataset used in this project is the **Gun Violence Dataset** from Kaggle.
 
-# 
+The original analysis script uses a local CSV path. In this public repo, I do not require the raw dataset to be committed by default.
 
-# \- \[archive/notes/version-note.md](archive/notes/version-note.md)
+Please check:
+- [Dataset note](data/README.md)
 
-# 
+---
 
-# \## Selected Visuals
+## Original Project Materials
 
-# 
+This repository keeps both a cleaner portfolio version and original course materials.
 
-# \### Incident Trend
+### Main public reading path
+- [Project walkthrough](walkthrough/project-walkthrough.md)
+- [Portfolio project summary PDF](reports/portfolio-project-summary.pdf)
+- [Selected figures](outputs/figures/selected/)
 
-# !\[Incidents by year](outputs/figures/eda/incidents-by-year.jpeg)
+### Original course materials
+- [Final report](reports/final-report.pdf)
+- [Original presentation slides](slides/original-presentation.pdf)
+- [Original analysis script](scripts/01_full_analysis.R)
+- [Original model output](archive/model-output/model-output.txt)
+- [Individual reflection](archive/reflection/individual-reflection.pdf)
 
-# 
+---
 
-# \### State-Level Pattern
+## Short Interview Version
 
-# !\[State map](outputs/figures/eda/state-map.jpeg)
-
-# 
-
-# \### Participant Gender
-
-# !\[Participant gender](outputs/figures/participants/participant-gender.jpeg)
-
-# 
-
-# \### Location Word Cloud
-
-# !\[Word cloud](outputs/figures/text-mining/wordcloud-frequency.jpeg)
-
-# 
-
-# \## Repo Structure
-
-# 
-
-# \- `walkthrough/` - main public guide for the project
-
-# \- `scripts/` - original R analysis script and package note
-
-# \- `outputs/` - renamed figures used in the public repo
-
-# \- `reports/` - final report PDF
-
-# \- `slides/` - original course slide deck
-
-# \- `archive/` - supporting source materials and version notes
-
-# \- `data/` - data note and data dictionary only
-
-# 
-
-# \## Contribution
-
-# 
-
-# This was an \*\*individual course project\*\*. I completed the analysis, report, and modeling on my own.
-
-# 
-
-# I also reviewed Kaggle notebooks and discussion posts for ideas on data cleaning and handling complex fields, but the work in this repo is my own course project output.
-
-# 
-
-# See \[contribution-note.md](contribution-note.md) for a short note.
-
-# 
-
-# \## Reading Order
-
-# 
-
-# If you are visiting this repo for the first time, I recommend this order:
-
-# 
-
-# 1\. \[Project walkthrough](walkthrough/project-walkthrough.md)
-
-# 2\. \[Final report](reports/ALY6040\_Gun\_Violence\_Final\_Report.pdf)
-
-# 3\. \[Original R script](scripts/01\_full\_analysis.R)
-
-# 4\. \[Slides](slides/ALY6040\_Gun\_Violence\_Presentation.pdf)
-
+This was my individual final project for a data mining course. I used a U.S. gun violence dataset in R to study time, location, and participant patterns, and I also tested models for higher-casualty incident prediction. The main value of the project was the full workflow: cleaning data, parsing complex fields, finding useful EDA patterns, and then honestly evaluating the limits of the model instead of only showing a high accuracy number.
