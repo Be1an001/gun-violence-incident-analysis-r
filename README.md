@@ -179,7 +179,9 @@ gun_data_encoded$high_casualty <- ifelse(gun_data_encoded$total_casualties >= 3,
 
 I tested Logistic Regression, KNN, LightGBM, and Random Forest.
 
-For this public GitHub version, I use the **final report version** as the main modeling reference, because it is the most complete written version and it matches the main R workflow more closely.
+The checked-in script here shows Random Forest, KNN, and XGBoost sections, and the archived model notes also preserve LightGBM output from the original project work.
+
+For this public GitHub version, I use the **final report version** as the main modeling reference, because it is the most complete written version and it matches the main project conclusions more closely.
 
 ### Main takeaway
 Random Forest was the strongest model among the tested options, but the class imbalance problem was still serious.

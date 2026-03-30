@@ -189,11 +189,13 @@ I also:
 
 I tested Logistic Regression, KNN, LightGBM, and Random Forest.
 
+The checked-in script here shows Random Forest, KNN, and XGBoost sections, and the archived model notes also preserve LightGBM output from the original project work.
+
 For this public GitHub version, I use the final report version as the main modeling reference.
 
 Why:
 - it is the most complete written version
-- it matches the main R workflow more closely
+- it matches the main project conclusions more closely
 - it gives a more realistic interpretation of the imbalanced classification problem
 
 ### Main public takeaway

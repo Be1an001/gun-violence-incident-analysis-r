@@ -36,7 +36,8 @@ I did not record the exact package versions during the original course submissio
 ## Notes
 
 - The final report mainly presents Random Forest as the main model.
-- The full script also includes extra experiments such as KNN, XGBoost, and LightGBM.
+- The checked-in script also includes extra experiments such as KNN and XGBoost.
+- Archived notes also preserve LightGBM output from the original project work.
 - Some experimental model results were kept in notes or slides rather than fully explained in the final report.
 
 ## Simple Install Example

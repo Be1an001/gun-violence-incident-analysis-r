@@ -2,6 +2,8 @@
 
 This public repo does **not** include the raw project CSV.
 
+A local copy can still be placed in `data/raw/` for reproduction, but it is not meant as a public redistributed dataset in this repo.
+
 ## Main File Used in the Original Project
 
 - **Filename:** `gun-violence-data_01-2013_03-2018.csv`
@@ -20,7 +22,7 @@ I left the raw CSV out of the public repo for three reasons:
 ## How to Reproduce the Project
 
 1. Download the dataset from the Kaggle source page above.
-2. Save the file as:
+2. Save the file locally as:
 
    `data/raw/gun-violence-data_01-2013_03-2018.csv`
 
