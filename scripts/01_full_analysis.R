@@ -8,8 +8,12 @@ library(scales)
 library(splitstackshape)
 
 # Loading the dataset as a dataframe
-data_path <- "data/raw/gun-violence-data_01-2013_03-2018.csv"
-if (!file.exists(data_path)) {
+data_paths <- c(
+  "data/raw/gun-violence-data_01-2013_03-2018.csv",
+  "../data/raw/gun-violence-data_01-2013_03-2018.csv"
+)
+data_path <- data_paths[file.exists(data_paths)][1]
+if (is.na(data_path)) {
   stop("Missing data/raw/gun-violence-data_01-2013_03-2018.csv. Download it from Kaggle and save it in data/raw/.")
 }
 gun_data <- read.csv(data_path)
@@ -441,8 +445,20 @@ library(caret)
 library(fastDummies)
 library(randomForest)
 
+# List of columns to remove
+columns_to_remove <- c(
+  "incident_id", "date", "city_or_county", "address", "incident_url", "source_url",
+  "incident_url_fields_missing", "gun_stolen", "gun_type", "incident_characteristics",
+  "latitude", "location_description", "longitude", "notes", "participant_age",
+  "participant_age_group", "participant_gender", "participant_name",
+  "participant_relationship", "participant_status", "participant_type",
+  "sources", "day", "date2")
+
+# Removing the specified columns before handling missing values
+gun_data_model <- gun_data[, !(names(gun_data) %in% columns_to_remove)]
+
 # Dropping missing values
-gun_data_clean <- gun_data %>% drop_na()
+gun_data_clean <- gun_data_model %>% drop_na()
 
 # Convert 'state', 'month', and 'weekday' to factor type
 gun_data_clean$state <- as.factor(gun_data_clean$state)
@@ -463,17 +479,8 @@ gun_data_encoded$total_casualties <- gun_data_encoded$n_killed + gun_data_encode
 # Creating the 'high_casualty' variable
 gun_data_encoded$high_casualty <- ifelse(gun_data_encoded$total_casualties >= 3, 1, 0)
 
-# List of columns to remove
-columns_to_remove <- c(
-  "incident_id", "date", "city_or_county", "address", "incident_url", "source_url",
-  "incident_url_fields_missing", "gun_stolen", "gun_type", "incident_characteristics",
-  "latitude", "location_description", "longitude", "notes", "participant_age",
-  "participant_age_group", "participant_gender", "participant_name",
-  "participant_relationship", "participant_status", "participant_type",
-  "sources", "day", "date2", "n_injured", "n_killed")
-
 # Removing the specified columns
-gun_data_encoded <- gun_data_encoded[, !(names(gun_data_encoded) %in% columns_to_remove)]
+gun_data_encoded <- gun_data_encoded[, !(names(gun_data_encoded) %in% c("n_injured", "n_killed"))]
 
 # Splitting the dataset into training and testing sets
 set.seed(123)
@@ -591,8 +598,9 @@ abline(a = 0, b = 1, lty = 2, col = "red")
 train_control <- trainControl(method = "cv", number = 10)
 
 # Train the random forest model using cross-validation
+train_data_cv <- train_data_scaled
 rf_cv_model <- train(high_casualty ~ . - total_casualties, 
-                     data = train_data, 
+                     data = train_data_cv, 
                      method = "rf", 
                      trControl = train_control,
                      ntree = 10)
@@ -615,7 +623,7 @@ k_values <- data.frame(k = c(1, 3, 5, 7, 9))
 
 # Train KNN model using cross-validation
 knn_model <- train(
-  high_casualty ~ ., 
+  high_casualty ~ . - total_casualties, 
   data = train_data_scaled, 
   method = "knn",
   trControl = train_control,
@@ -639,8 +647,9 @@ print(knn_confusion)
 library(xgboost)
 
 # Convert data to matrix for XGBoost (it requires a numeric matrix format)
-train_matrix <- as.matrix(train_data_scaled[, -which(names(train_data_scaled) == "high_casualty")])
-test_matrix <- as.matrix(test_data_scaled[, -which(names(test_data_scaled) == "high_casualty")])
+xgb_predictor_columns <- setdiff(names(train_data_scaled), c("high_casualty", "total_casualties"))
+train_matrix <- as.matrix(train_data_scaled[, xgb_predictor_columns])
+test_matrix <- as.matrix(test_data_scaled[, xgb_predictor_columns])
 train_labels <- as.numeric(train_data_scaled$high_casualty) - 1  # Convert factor to 0 and 1
 test_labels <- as.numeric(test_data_scaled$high_casualty) - 1
 
