@@ -528,7 +528,7 @@ rf_model <- randomForest(
 
 # Predicting on the test set
 # Remove 'high_casualty' from test data predictors
-test_predictors <- test_data_scaled[, !(names(test_data_scaled) %in% c("high_casualty"))]
+test_predictors <- test_data_scaled[, !(names(test_data_scaled) %in% c("high_casualty", "total_casualties"))]
 predictions <- predict(rf_model, newdata = test_predictors)
 
 # Evaluating the model with a confusion matrix
