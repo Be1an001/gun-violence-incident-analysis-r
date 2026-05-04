@@ -60,3 +60,7 @@ These were created during the project workflow and are not part of the raw CSV:
 - `date2` - combined display field for year, month, and day
 - `total_casualties` - `n_killed + n_injured`
 - `high_casualty` - binary field for incidents with 3 or more total casualties
+
+## Modeling Note
+
+The `high_casualty` target is derived from `n_killed` and `n_injured`. Any model that uses `n_killed`, `n_injured`, or `total_casualties` as predictors for this target would create leakage risk. The public README and walkthrough use the more conservative final report metrics for model discussion.

@@ -1,8 +1,8 @@
 # Data Note
 
-This public repo does **not** include the raw project CSV.
+This public repo is not meant to redistribute the raw project CSV.
 
-A local copy can still be placed in `data/raw/` for reproduction, but it is not meant as a public redistributed dataset in this repo.
+A local copy can be placed in `data/raw/` for reproduction. That folder is ignored by Git so the large source file does not become part of the public portfolio repository.
 
 ## Main File Used in the Original Project
 
@@ -13,7 +13,7 @@ A local copy can still be placed in `data/raw/` for reproduction, but it is not 
 
 ## Why the Raw Data Is Not in This Repo
 
-I left the raw CSV out of the public repo for three reasons:
+I keep the raw CSV out of the public repo for three reasons:
 
 1. the original file is large and not good for a clean public GitHub repo
 2. I want the repo to stay easy to clone and easy to read
@@ -28,6 +28,8 @@ I left the raw CSV out of the public repo for three reasons:
 
 3. Open `scripts/01_full_analysis.R`.
 4. Make sure the file path points to the file above.
+
+The script checks both `data/raw/` and `../data/raw/`, so it can run from the repository root or from inside the `scripts/` folder.
 
 ## Version Note
 
@@ -44,3 +46,7 @@ For this repo, I document the exact file used in the project:
 - `README.md` - data access note
 - `data-dictionary.md` - simple working dictionary for the project columns
 - `raw/` - local folder for downloaded data; keep this folder out of Git
+
+## Documentation Note
+
+The project uses raw incident counts for state and city visuals. Those charts should not be interpreted as per-capita risk comparisons unless population data is added later.

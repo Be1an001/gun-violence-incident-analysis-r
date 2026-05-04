@@ -1,8 +1,6 @@
 # Packages Used
 
-This note is based on the original script used in this project.
-
-I did not record the exact package versions during the original course submission, so this file is a practical package list, not a full environment lock file.
+This note is based on the original R script used in this project. I did not record exact package versions during the course submission, so this is a practical package list rather than a full environment lock file.
 
 ## Core Data Work
 
@@ -14,7 +12,7 @@ I did not record the exact package versions during the original course submissio
 - `maps`
 - `splitstackshape`
 
-## Text Mining / Word Cloud
+## Text Mining / Word Clouds
 
 - `tidytext`
 - `tm`
@@ -35,10 +33,11 @@ I did not record the exact package versions during the original course submissio
 
 ## Notes
 
-- The final report mainly presents Random Forest as the main model.
-- The checked-in script also includes extra experiments such as KNN and XGBoost.
-- Archived notes also preserve LightGBM output from the original project work.
-- Some experimental model results were kept in notes or slides rather than fully explained in the final report.
+- The final public write-up mainly uses Random Forest as the model reference.
+- The checked-in script also includes KNN and XGBoost experiments.
+- Archived notes preserve additional LightGBM output from the original course work.
+- Some original slide or archived model materials show stronger metrics than the final report. The public README and walkthrough use the more conservative final report metrics.
+- This package list does not make the project production-ready; it is only meant to help rerun the original analysis.
 
 ## Simple Install Example
 
@@ -62,5 +61,7 @@ install.packages(c(
   "pROC",
   "ModelMetrics",
   "class",
-  "xgboost"
+  "xgboost",
+  "lightgbm"
 ))
+```

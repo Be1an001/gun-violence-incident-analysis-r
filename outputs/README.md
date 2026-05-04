@@ -1,40 +1,58 @@
 # Outputs Folder
 
-This folder keeps selected project outputs that are useful for GitHub visitors.
+This folder keeps selected project outputs that are useful for GitHub visitors and interview review.
 
-## Folder structure
+## Folder Structure
 
-- `figures/selected/`
-  - the main charts I want HR or interviewers to see first
-- `figures/full-set/`
-  - the larger original chart collection from the project
-- `portfolio-pdf/`
-  - optional cleaned portfolio PDF version if included
+- [`figures/selected/`](figures/selected/) - selected charts used in the README and walkthrough
 
-## What I kept in `selected/`
+The original course project created more charts than the selected set shown here. For the public portfolio version, I kept the visuals that explain the project story most clearly.
 
-I picked a smaller set of charts that tell the project story more clearly:
+## What I Kept in `figures/selected/`
 
-- top states by incident frequency
+The selected folder includes charts for:
+
 - yearly incident trend
 - monthly incident trend
 - weekday pattern
-- top cities
+- incidents by quarter and year
+- top states by raw incident count
+- top cities by raw incident count
+- U.S. state map by raw incident count
 - participant status
-- participant ages
-- gender distribution
-- two word clouds
-- one model evaluation figure
+- participant type
+- participant age
+- participant gender
+- incident characteristics
+- outliers in `n_killed` and `n_injured`
+- relationship between killed and injured counts
+- location-description word clouds
+- model evaluation artifacts from the original work
 
-## Why I did not show every output in the README
+## Recommended Visuals for the Public Story
 
-The original project created many charts, and some of them repeat the same point. For a public portfolio repo, I wanted the main folder to stay cleaner and easier to scan.
+For the README or interview slides, the clearest visuals are:
 
-The full set can still be kept in:
-- `figures/full-set/`
+- `number-of-incidents-by-year-2013-2018.jpeg`
+- `incidents-by-weekday.jpeg`
+- `top-states-by-incident-frequency.jpeg`
+- `top-10-cities-by-number-of-incidents.jpeg`
+- `distribution-of-participant-statuses.jpeg`
+- `top-10-most-common-participant-ages.jpeg`
+- `gender-distribution-of-participants.jpeg`
+- `wordcloud-1.jpeg`
 
-## Important note about model evaluation visuals
+The state and city charts show raw incident counts, not per-capita risk.
 
-Some model evaluation images in the original materials come from a slide version that does not fully match the final report version. For the public walkthrough and README, I use the final report as the main reference.
+## Important Note About Model Evaluation Visuals
 
-If I keep those slide-based figures, I place them in archive or clearly label them as original course materials.
+Some model evaluation visuals come from the original course materials and may not fully match the final conservative model interpretation used in the public README.
+
+For public portfolio use, the safest model reference is:
+
+- Accuracy: 97.45%
+- Precision: 86.67%
+- Recall: 2.94%
+- F1 Score: 5.68%
+
+Because recall is very weak, the model should be described as a coursework classification experiment rather than a reliable high-casualty prediction system.
