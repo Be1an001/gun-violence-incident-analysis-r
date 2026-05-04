@@ -21,4 +21,4 @@ I also reviewed Kaggle notebooks and discussion posts to improve my ideas for ha
 
 For this GitHub version, I reorganized the original course materials into a cleaner portfolio format. The public write-up keeps the project easier to read, while the archive folder keeps original files for traceability.
 
-Some original slide materials show stronger model metrics than the final public write-up. For resume, interview, and portfolio use, the safer reference is the final report version: high overall accuracy but very weak recall for high-casualty incidents.
+Some original slide materials show stronger model metrics than the final public write-up. For this repository documentation, the safer reference is the final report version: high overall accuracy but very weak recall for high-casualty incidents.

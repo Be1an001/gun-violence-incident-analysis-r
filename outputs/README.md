@@ -1,6 +1,6 @@
 # Outputs Folder
 
-This folder keeps selected project outputs that are useful for GitHub visitors and interview review.
+This folder keeps selected project outputs that are useful for GitHub visitors and portfolio review.
 
 ## Folder Structure
 
@@ -31,7 +31,7 @@ The selected folder includes charts for:
 
 ## Recommended Visuals for the Public Story
 
-For the README or interview slides, the clearest visuals are:
+For the README, walkthrough, or other project documentation, the clearest visuals are:
 
 - `number-of-incidents-by-year-2013-2018.jpeg`
 - `incidents-by-weekday.jpeg`

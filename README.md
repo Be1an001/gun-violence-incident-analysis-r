@@ -187,17 +187,6 @@ Some original slide materials show much stronger model metrics from an earlier v
 
 The repository keeps the original course workflow rather than a production-style pipeline. Exact package versions were not locked during the original submission.
 
-## Evidence and Files to Read First
-
-For the shortest review path:
-
-1. [walkthrough/project-walkthrough.md](walkthrough/project-walkthrough.md)
-2. [reports/portfolio-project-summary.pdf](reports/portfolio-project-summary.pdf)
-3. [reports/final-report.pdf](reports/final-report.pdf)
-4. [outputs/figures/selected/](outputs/figures/selected/)
-5. [scripts/01_full_analysis.R](scripts/01_full_analysis.R)
-6. [archive/model-output/model-output.txt](archive/model-output/model-output.txt)
-
 ## Limitations
 
 This project has several important limitations:
@@ -224,6 +213,15 @@ Future improvements would include:
 - separate the original course artifacts from the final public portfolio story more clearly
 - optionally add a small dashboard or Shiny app later, if the goal becomes interactive exploration
 
-## Short Interview Version
+## Related Files
 
-This was my individual final project for a data mining course. I used a public U.S. gun violence dataset in R to study time, location, participant, and incident-severity patterns. I also tested models for higher-casualty incident classification, but the most important lesson was that high accuracy did not mean the model was useful, because recall for the rare high-casualty class was very weak. The strongest value of the project is the full R analytics workflow and the honest interpretation of the model limits.
+- [walkthrough/project-walkthrough.md](walkthrough/project-walkthrough.md) - detailed project walkthrough
+- [data/README.md](data/README.md) - data access and reproduction note
+- [data/data-dictionary.md](data/data-dictionary.md) - working column dictionary
+- [scripts/01_full_analysis.R](scripts/01_full_analysis.R) - main R analysis script
+- [scripts/02_final_report_source.Rmd](scripts/02_final_report_source.Rmd) - report source
+- [scripts/packages-used.md](scripts/packages-used.md) - practical package list
+- [reports/final-report.pdf](reports/final-report.pdf) - original final report
+- [reports/portfolio-project-summary.pdf](reports/portfolio-project-summary.pdf) - shorter portfolio summary PDF
+- [outputs/figures/selected/](outputs/figures/selected/) - selected visual outputs
+- [archive/model-output/model-output.txt](archive/model-output/model-output.txt) - archived model-output notes

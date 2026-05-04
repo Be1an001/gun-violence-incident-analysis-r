@@ -301,17 +301,14 @@ I learned how to:
 - explain why a high accuracy score can still be misleading
 - keep portfolio claims honest when older artifacts show different metrics
 
-## 16. Files to Read First
+## 16. Related Files
 
-If you want the shortest path through this repo, I suggest this order:
+The most important files for understanding this project are:
 
-1. [`../README.md`](../README.md)
-2. [`../reports/portfolio-project-summary.pdf`](../reports/portfolio-project-summary.pdf)
-3. [`../reports/final-report.pdf`](../reports/final-report.pdf)
-4. [`../outputs/figures/selected/`](../outputs/figures/selected/)
-5. [`../scripts/01_full_analysis.R`](../scripts/01_full_analysis.R)
-6. [`../archive/model-output/model-output.txt`](../archive/model-output/model-output.txt)
-
-## 17. Short Interview Version
-
-This was my individual final project for a data mining course. I used a public U.S. gun violence dataset in R to study time, location, participant, and severity patterns. I also tested high-casualty classification models, but the final Random Forest recall was very weak, so I would not describe it as a reliable prediction system. The strongest value of the project is the full R workflow: cleaning the data, parsing messy fields, building visuals, testing models, and being honest about the limits of the result.
+- [`../README.md`](../README.md) - main project overview
+- [`../reports/portfolio-project-summary.pdf`](../reports/portfolio-project-summary.pdf) - shorter portfolio summary PDF
+- [`../reports/final-report.pdf`](../reports/final-report.pdf) - original final report
+- [`../outputs/figures/selected/`](../outputs/figures/selected/) - selected figures
+- [`../scripts/01_full_analysis.R`](../scripts/01_full_analysis.R) - main R analysis script
+- [`../scripts/02_final_report_source.Rmd`](../scripts/02_final_report_source.Rmd) - report source
+- [`../archive/model-output/model-output.txt`](../archive/model-output/model-output.txt) - archived model-output notes
